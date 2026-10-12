@@ -2,582 +2,733 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Minha Nuvem</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha Nuvem Pessoal</title>
 
-<style>
-* { box-sizing: border-box; }
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-body {
-  margin: 0;
-  background: #101827;
-  color: #f1f5f9;
-  font-family: Arial, sans-serif;
-}
+  <style>
+    * { box-sizing: border-box; }
 
-header, main {
-  max-width: 1000px;
-  margin: auto;
-  padding: 22px;
-}
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #101218;
+      color: #f2f3f7;
+    }
 
-header { border-bottom: 1px solid #34445b; }
-h1 { margin: 0 0 8px; }
-p { color: #bac6d8; line-height: 1.5; }
+    main {
+      max-width: 950px;
+      margin: auto;
+    }
 
-button, .download-link {
-  display: inline-block;
-  border: 0;
-  border-radius: 9px;
-  padding: 11px 15px;
-  background: #3478f6;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-  margin: 4px 4px 4px 0;
-}
+    h1 { margin-bottom: 8px; }
 
-button:disabled { opacity: .5; cursor: wait; }
+    .subtitle, #status {
+      color: #b8bdca;
+    }
 
-.card {
-  background: #192538;
-  border: 1px solid #34445b;
-  border-radius: 14px;
-  padding: 20px;
-  margin: 18px 0;
-}
+    .panel {
+      background: #1b1f2a;
+      border: 1px solid #303747;
+      border-radius: 14px;
+      padding: 18px;
+      margin: 18px 0;
+    }
 
-#status {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: #aab7ca;
-}
+    button, .file-button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 4px;
+      background: #526dff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 14px;
+    }
 
-#files { padding: 0; list-style: none; }
+    button:hover, .file-button:hover {
+      filter: brightness(1.15);
+    }
 
-#files li {
-  padding: 14px 0;
-  border-bottom: 1px solid #34445b;
-  overflow-wrap: anywhere;
-}
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
 
-.file-name { font-weight: bold; }
-.file-detail {
-  display: block;
-  color: #aab7ca;
-  font-size: 12px;
-  margin: 5px 0;
-}
+    .secondary { background: #343b4d; }
+    .danger { background: #b83245; }
+    .green { background: #18865a; }
 
-#preview { margin-top: 20px; overflow: hidden; }
+    input[type="file"] {
+      max-width: 100%;
+      margin: 10px 0;
+    }
 
-#preview img {
-  display: block;
-  max-width: 100%;
-  max-height: 70vh;
-  margin: 12px auto;
-  border-radius: 8px;
-}
+    .remember {
+      display: block;
+      margin: 14px 0;
+      color: #e1e5ef;
+    }
 
-#preview iframe {
-  width: 100%;
-  height: 70vh;
-  border: 0;
-  border-radius: 8px;
-  background: white;
-}
+    .file {
+      background: #222735;
+      border: 1px solid #343c4d;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 10px 0;
+      overflow-wrap: anywhere;
+    }
 
-#preview audio { width: 100%; margin: 15px 0; }
-#preview video { width: 100%; max-height: 70vh; }
-#preview h3 { overflow-wrap: anywhere; }
-a { color: #8bb8ff; }
-small { color: #aab7ca; }
-.hidden { display: none !important; }
+    .file-name {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
 
-.remember {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  margin: 14px 0;
-  color: #d5deeb;
-}
+    .file-info {
+      color: #aeb7c8;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
 
-.remember input { width: 17px; height: 17px; }
-</style>
+    #preview img, #preview video {
+      max-width: 100%;
+      max-height: 65vh;
+      border-radius: 10px;
+    }
+
+    #preview iframe {
+      width: 100%;
+      height: 65vh;
+      border: 0;
+      border-radius: 10px;
+      background: white;
+    }
+
+    #preview audio { width: 100%; }
+
+    .hidden { display: none; }
+
+    a { color: #a8b9ff; }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+  </style>
 </head>
 
 <body>
-<header>
-  <h1>☁️ Minha Nuvem</h1>
-  <p>Seus arquivos, em um só lugar.</p>
-</header>
-
 <main>
-  <section class="card">
-    <h2>🔐 Google Drive</h2>
-    <p>Conecte sua conta para acessar seus arquivos.</p>
+  <h1>☁️ Minha Nuvem Pessoal</h1>
+  <p class="subtitle">
+    Seus arquivos em um só lugar.
+  </p>
+
+  <section class="panel">
+    <h2>Google Drive</h2>
+
+    <p id="account">Nenhuma conta conectada.</p>
 
     <label class="remember">
       <input type="checkbox" id="remember">
-      Lembrar minha preferência neste navegador
+      Lembrar minha conta neste navegador
     </label>
 
-    <button id="connect" disabled>Carregando autenticação...</button>
-    <button id="refresh" hidden>Atualizar arquivos</button>
-    <button id="disconnect" hidden>Desconectar</button>
+    <div class="top-actions">
+      <button id="connect">Conectar Google Drive</button>
+      <button id="refresh" class="secondary" disabled>
+        Atualizar arquivos
+      </button>
+      <button id="disconnect" class="secondary" disabled>
+        Desconectar
+      </button>
+    </div>
 
-    <p id="status" role="status">Carregando biblioteca do Google...</p>
+    <p id="status" role="status">Preparando conexão...</p>
   </section>
 
-  <section class="card">
-    <h2>📁 Meus arquivos</h2>
-    <p>Visualize, reproduza ou baixe seus arquivos.</p>
-    <ul id="files"></ul>
-    <div id="preview"></div>
+  <section class="panel">
+    <h2>Enviar arquivos</h2>
+    <input type="file" id="uploadFiles" multiple>
+    <br>
+    <button id="uploadButton" class="green" disabled>
+      Enviar para o Drive
+    </button>
+    <p class="subtitle">
+      Os arquivos enviados ficam na raiz do seu Google Drive.
+    </p>
   </section>
 
-  <section class="card">
-    <h2>🗃️ TeraBox</h2>
-    <p>A integração ainda não está configurada. Não informe sua senha aqui.</p>
+  <section class="panel">
+    <h2>Meus arquivos</h2>
+    <div id="files">
+      Conecte sua conta para visualizar os arquivos.
+    </div>
   </section>
 
-  <small>
-    Sua senha e seu token de acesso não são salvos neste site.
-    A autorização do Google pode precisar ser renovada.
-  </small>
+  <section class="panel">
+    <h2>Visualizador</h2>
+    <div id="preview">Selecione um arquivo para visualizar.</div>
+  </section>
+
+  <section class="panel">
+    <h2>TeraBox</h2>
+    <p>
+      A integração direta com o TeraBox ainda não está configurada.
+    </p>
+    <a href="https://www.terabox.com/" target="_blank"
+       rel="noopener noreferrer">Abrir TeraBox</a>
+  </section>
 </main>
 
 <script>
-const CLIENT_ID =
-  "682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
+(() => {
+  "use strict";
 
-const SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+  // Seu ID público de cliente OAuth do Google.
+  const CLIENT_ID =
+    "682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
 
-let tokenClient = null;
-let accessToken = null;
-let previewUrl = null;
-let generation = 0;
+  // Permissões para listar, enviar e mover arquivos para a lixeira.
+  const SCOPES =
+    "openid email profile https://www.googleapis.com/auth/drive";
 
-const connect = document.getElementById("connect");
-const refresh = document.getElementById("refresh");
-const disconnect = document.getElementById("disconnect");
-const remember = document.getElementById("remember");
-const status = document.getElementById("status");
-const files = document.getElementById("files");
-const preview = document.getElementById("preview");
+  const $ = id => document.getElementById(id);
 
-function setStatus(message) {
-  status.textContent = message;
-}
+  const connectButton = $("connect");
+  const refreshButton = $("refresh");
+  const disconnectButton = $("disconnect");
+  const uploadButton = $("uploadButton");
+  const rememberCheckbox = $("remember");
 
-/* Cookie: guarda apenas a preferência, nunca a senha ou o token. */
-function setCookie(name, value, days) {
-  const secure = location.protocol === "https:" ? "; Secure" : "";
-  document.cookie =
-    name + "=" + encodeURIComponent(value) +
-    "; Max-Age=" + (days * 86400) +
-    "; Path=/; SameSite=Lax" + secure;
-}
+  let tokenClient = null;
+  let accessToken = null;
+  let currentEmail = "";
+  let connecting = false;
+  let objectUrls = [];
 
-function getCookie(name) {
-  const prefix = name + "=";
-  const item = document.cookie
-    .split("; ")
-    .find(part => part.startsWith(prefix));
+  const savedRemember =
+    localStorage.getItem("rememberGoogleAccount") === "true";
 
-  return item ? decodeURIComponent(item.substring(prefix.length)) : "";
-}
+  rememberCheckbox.checked = savedRemember;
 
-function updateRememberPreference() {
-  if (remember.checked) {
-    setCookie("minha_nuvem_lembrar", "sim", 180);
-  } else {
-    setCookie("minha_nuvem_lembrar", "", 0);
-  }
-}
-
-remember.checked = getCookie("minha_nuvem_lembrar") === "sim";
-
-remember.addEventListener("change", updateRememberPreference);
-
-function clearPreview() {
-  if (previewUrl) {
-    URL.revokeObjectURL(previewUrl);
-    previewUrl = null;
-  }
-  preview.replaceChildren();
-}
-
-function clearFiles() {
-  files.replaceChildren();
-  clearPreview();
-}
-
-function formatSize(size) {
-  if (size == null) return "";
-
-  const bytes = Number(size);
-  if (!Number.isFinite(bytes)) return "";
-
-  if (bytes < 1024) return bytes + " bytes";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-function makeButton(label, action) {
-  const button = document.createElement("button");
-  button.textContent = label;
-  button.addEventListener("click", action);
-  return button;
-}
-
-function isGoogleWorkspaceFile(file) {
-  return (file.mimeType || "").startsWith("application/vnd.google-apps.");
-}
-
-/* Busca o conteúdo do arquivo com o token mantido apenas em memória. */
-async function getFileBlob(file) {
-  if (!accessToken) {
-    throw new Error("Conecte o Google Drive novamente.");
+  function setStatus(message) {
+    $("status").textContent = message;
   }
 
-  if (isGoogleWorkspaceFile(file)) {
-    throw new Error(
-      "Este é um documento nativo do Google. Use 'Abrir no Google Drive' para acessá-lo."
+  function updateButtons(connected) {
+    refreshButton.disabled = !connected;
+    disconnectButton.disabled = !connected;
+    uploadButton.disabled = !connected;
+    connectButton.textContent = connected
+      ? "Conectado ao Google Drive"
+      : "Conectar Google Drive";
+  }
+
+  function saveAccountPreference() {
+    localStorage.setItem(
+      "rememberGoogleAccount",
+      rememberCheckbox.checked ? "true" : "false"
     );
+
+    if (!rememberCheckbox.checked) {
+      localStorage.removeItem("rememberedGoogleEmail");
+    } else if (currentEmail) {
+      localStorage.setItem("rememberedGoogleEmail", currentEmail);
+    }
   }
 
-  const url =
-    "https://www.googleapis.com/drive/v3/files/" +
-    encodeURIComponent(file.id) + "?alt=media";
+  rememberCheckbox.addEventListener(
+    "change",
+    saveAccountPreference
+  );
 
-  const response = await fetch(url, {
-    headers: { Authorization: "Bearer " + accessToken }
-  });
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(
-      data.error?.message || "Erro HTTP " + response.status
-    );
+  function clearObjectUrls() {
+    for (const url of objectUrls) {
+      URL.revokeObjectURL(url);
+    }
+    objectUrls = [];
   }
 
-  return await response.blob();
-}
-
-/* Download para o computador. */
-async function downloadFile(file, button) {
-  const oldText = button.textContent;
-  button.disabled = true;
-  button.textContent = "Baixando...";
-
-  try {
-    const blob = await getFileBlob(file);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-
-    anchor.href = url;
-    anchor.download = file.name || "arquivo";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    setStatus("Download iniciado: " + file.name);
-  } catch (error) {
-    setStatus("Não foi possível baixar: " + error.message);
-  } finally {
-    button.disabled = false;
-    button.textContent = oldText;
-  }
-}
-
-/* Prévia de imagens, PDFs e reprodução de áudio/vídeo. */
-async function previewFile(file) {
-  clearPreview();
-
-  const title = document.createElement("h3");
-  title.textContent = "Visualizando: " + file.name;
-  preview.appendChild(title);
-
-  const loading = document.createElement("p");
-  loading.textContent = "Carregando arquivo...";
-  preview.appendChild(loading);
-
-  const currentGeneration = generation;
-
-  try {
-    const blob = await getFileBlob(file);
-
-    if (currentGeneration !== generation || !accessToken) return;
-
-    clearPreview();
-    preview.appendChild(title);
-
-    previewUrl = URL.createObjectURL(blob);
-
-    const mime = file.mimeType || blob.type || "";
-
-    if (mime.startsWith("image/")) {
-      const img = document.createElement("img");
-      img.alt = file.name;
-      img.src = previewUrl;
-      preview.appendChild(img);
-    } else if (mime === "application/pdf") {
-      const frame = document.createElement("iframe");
-      frame.title = "Prévia de " + file.name;
-      frame.src = previewUrl;
-      preview.appendChild(frame);
-    } else if (mime.startsWith("audio/")) {
-      const audio = document.createElement("audio");
-      audio.controls = true;
-      audio.preload = "metadata";
-      audio.src = previewUrl;
-      preview.appendChild(audio);
-    } else if (mime.startsWith("video/")) {
-      const video = document.createElement("video");
-      video.controls = true;
-      video.preload = "metadata";
-      video.src = previewUrl;
-      preview.appendChild(video);
-    } else {
-      const message = document.createElement("p");
-      message.textContent =
-        "Não há prévia disponível para este formato. Você pode baixar o arquivo.";
-      preview.appendChild(message);
+  function disconnect() {
+    if (accessToken && window.google?.accounts?.oauth2) {
+      google.accounts.oauth2.revoke(accessToken, () => {});
     }
 
-    const downloadButton = makeButton("⬇️ Baixar arquivo", () => {
-      const button = preview.querySelector("button");
-      downloadFile(file, button);
+    accessToken = null;
+    currentEmail = "";
+    connecting = false;
+
+    $("account").textContent = "Nenhuma conta conectada.";
+    $("files").textContent =
+      "Conecte sua conta para visualizar os arquivos.";
+    $("preview").textContent =
+      "Selecione um arquivo para visualizar.";
+
+    clearObjectUrls();
+    updateButtons(false);
+    setStatus("Conta desconectada.");
+
+    // Mantém somente a preferência de lembrar a conta.
+    // Nenhum token é salvo em armazenamento persistente.
+  }
+
+  async function apiRequest(url, options = {}) {
+    if (!accessToken) {
+      throw new Error("Conecte sua conta do Google primeiro.");
+    }
+
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", "Bearer " + accessToken);
+
+    const response = await fetch(url, {
+      ...options,
+      headers
     });
-    preview.appendChild(downloadButton);
 
-    if (file.webViewLink) {
-      const link = document.createElement("a");
-      link.href = file.webViewLink;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = "Abrir no Google Drive";
-      link.style.display = "inline-block";
-      link.style.margin = "12px";
-      preview.appendChild(link);
-    }
-  } catch (error) {
-    if (currentGeneration !== generation) return;
-
-    clearPreview();
-
-    const message = document.createElement("p");
-    message.textContent = "Erro: " + error.message;
-    preview.appendChild(message);
-
-    if (file.webViewLink) {
-      const link = document.createElement("a");
-      link.href = file.webViewLink;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = "Abrir no Google Drive";
-      preview.appendChild(link);
-    }
-  }
-}
-
-function showFiles(items) {
-  files.replaceChildren();
-  clearPreview();
-
-  if (!items.length) {
-    const li = document.createElement("li");
-    li.textContent = "Nenhum arquivo encontrado.";
-    files.appendChild(li);
-    return;
-  }
-
-  for (const file of items) {
-    const li = document.createElement("li");
-
-    const name = document.createElement("div");
-    name.className = "file-name";
-    name.textContent = file.name || "Arquivo sem nome";
-    li.appendChild(name);
-
-    const detail = document.createElement("span");
-    detail.className = "file-detail";
-    detail.textContent =
-      (file.mimeType || "Tipo desconhecido") +
-      (file.size ? " • " + formatSize(file.size) : "");
-    li.appendChild(detail);
-
-    const mime = file.mimeType || "";
-    const canPreview =
-      mime.startsWith("image/") ||
-      mime === "application/pdf" ||
-      mime.startsWith("audio/") ||
-      mime.startsWith("video/");
-
-    if (canPreview) {
-      li.appendChild(
-        makeButton("▶ Visualizar / Reproduzir", () => previewFile(file))
+    if (response.status === 401) {
+      accessToken = null;
+      updateButtons(false);
+      throw new Error(
+        "A autorização expirou. Clique em Conectar Google Drive."
       );
     }
 
-    if (!isGoogleWorkspaceFile(file)) {
-      const downloadButton = makeButton("⬇ Baixar", () => {
-        downloadFile(file, downloadButton);
-      });
-      li.appendChild(downloadButton);
-    }
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const errorData = await response.json();
+        detail = errorData.error?.message || "";
+      } catch (_) {}
 
-    if (file.webViewLink) {
-      const link = document.createElement("a");
-      link.href = file.webViewLink;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = "Abrir no Google Drive";
-      link.style.marginLeft = "8px";
-      li.appendChild(link);
-    }
-
-    files.appendChild(li);
-  }
-}
-
-async function loadFiles() {
-  if (!accessToken) return;
-
-  const currentGeneration = generation;
-  setStatus("Buscando arquivos...");
-  refresh.disabled = true;
-  clearFiles();
-
-  try {
-    let allFiles = [];
-    let pageToken;
-
-    do {
-      const url = new URL("https://www.googleapis.com/drive/v3/files");
-      url.searchParams.set("pageSize", "100");
-      url.searchParams.set("orderBy", "name");
-      url.searchParams.set(
-        "fields",
-        "nextPageToken,files(id,name,mimeType,webViewLink,size)"
+      throw new Error(
+        detail || "Erro na API do Google: " + response.status
       );
-      url.searchParams.set("q", "trashed = false");
+    }
 
-      if (pageToken) url.searchParams.set("pageToken", pageToken);
+    return response;
+  }
 
-      const response = await fetch(url, {
-        headers: { Authorization: "Bearer " + accessToken }
-      });
+  async function loadAccountInfo() {
+    const response = await apiRequest(
+      "https://www.googleapis.com/oauth2/v3/userinfo"
+    );
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          data.error?.message || "Erro HTTP " + response.status
+    const user = await response.json();
+    currentEmail = user.email || "";
+
+    $("account").textContent = currentEmail
+      ? "Conta conectada: " + currentEmail
+      : "Google Drive conectado.";
+
+    if (rememberCheckbox.checked && currentEmail) {
+      localStorage.setItem("rememberedGoogleEmail", currentEmail);
+    } else {
+      localStorage.removeItem("rememberedGoogleEmail");
+    }
+  }
+
+  async function onAuthorized(response) {
+    connecting = false;
+
+    if (response.error || !response.access_token) {
+      setStatus("Não foi possível conectar. Tente novamente.");
+      updateButtons(false);
+      return;
+    }
+
+    // O token fica apenas na memória desta página.
+    accessToken = response.access_token;
+    updateButtons(true);
+    setStatus("Conectando ao Google Drive...");
+
+    try {
+      await loadAccountInfo();
+      await showFiles();
+      setStatus("Google Drive conectado!");
+    } catch (error) {
+      setStatus(error.message);
+    }
+  }
+
+  function onAuthError(error) {
+    connecting = false;
+    console.error("Erro de autenticação:", error);
+    setStatus(
+      "Não foi possível reconectar automaticamente. " +
+      "Clique em Conectar Google Drive."
+    );
+  }
+
+  function initializeGoogle() {
+    if (!window.google?.accounts?.oauth2) {
+      setStatus("Não foi possível carregar o login do Google. Recarregue a página.");
+      return;
+    }
+
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      include_granted_scopes: true,
+      callback: onAuthorized,
+      error_callback: onAuthError
+    });
+
+    setStatus("Pronto para conectar.");
+
+    // Tenta recuperar a autorização anterior quando a opção está ativa.
+    // O Google pode exigir uma nova interação por segurança.
+    const rememberedEmail =
+      localStorage.getItem("rememberedGoogleEmail");
+
+    if (rememberCheckbox.checked && rememberedEmail) {
+      setStatus("Tentando reconectar à conta lembrada...");
+      connecting = true;
+
+      try {
+        tokenClient.requestAccessToken({
+          prompt: "",
+          login_hint: rememberedEmail
+        });
+      } catch (error) {
+        connecting = false;
+        setStatus(
+          "Clique em Conectar Google Drive para continuar."
         );
       }
-
-      const data = await response.json();
-      allFiles = allFiles.concat(data.files || []);
-      pageToken = data.nextPageToken;
-    } while (pageToken);
-
-    if (currentGeneration !== generation) return;
-
-    showFiles(allFiles);
-    setStatus("Encontrados " + allFiles.length + " arquivo(s).");
-  } catch (error) {
-    if (currentGeneration !== generation) return;
-    setStatus("Não foi possível listar os arquivos: " + error.message);
-  } finally {
-    if (currentGeneration === generation) refresh.disabled = false;
-  }
-}
-
-function initialize() {
-  if (!window.google?.accounts?.oauth2) {
-    setStatus("A biblioteca do Google não carregou. Atualize a página.");
-    return;
+    }
   }
 
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPE,
+  connectButton.addEventListener("click", () => {
+    if (!tokenClient) {
+      setStatus("O login ainda está carregando. Tente novamente.");
+      return;
+    }
 
-    callback: async (response) => {
-      if (response.error) {
-        setStatus("Autorização não concluída: " + response.error);
+    if (connecting) return;
+
+    connecting = true;
+    saveAccountPreference();
+    setStatus("Abrindo autorização do Google...");
+
+    const rememberedEmail =
+      rememberCheckbox.checked
+        ? localStorage.getItem("rememberedGoogleEmail")
+        : null;
+
+    tokenClient.requestAccessToken({
+      prompt: rememberedEmail ? "" : "consent",
+      ...(rememberedEmail ? { login_hint: rememberedEmail } : {})
+    });
+  });
+
+  disconnectButton.addEventListener("click", disconnect);
+
+  refreshButton.addEventListener("click", async () => {
+    try {
+      setStatus("Atualizando arquivos...");
+      await showFiles();
+      setStatus("Lista atualizada.");
+    } catch (error) {
+      setStatus(error.message);
+    }
+  });
+
+  async function showFiles() {
+    $("files").textContent = "Carregando arquivos...";
+    clearObjectUrls();
+
+    const query = new URLSearchParams({
+      q: "trashed = false",
+      pageSize: "100",
+      orderBy: "name",
+      fields:
+        "files(id,name,mimeType,size,modifiedTime,webViewLink),nextPageToken"
+    });
+
+    const response = await apiRequest(
+      "https://www.googleapis.com/drive/v3/files?" + query
+    );
+
+    const data = await response.json();
+    const container = $("files");
+    container.replaceChildren();
+
+    if (!data.files || data.files.length === 0) {
+      container.textContent = "Nenhum arquivo encontrado.";
+      return;
+    }
+
+    for (const file of data.files) {
+      const item = document.createElement("div");
+      item.className = "file";
+
+      const name = document.createElement("div");
+      name.className = "file-name";
+      name.textContent = file.name;
+
+      const info = document.createElement("div");
+      info.className = "file-info";
+      info.textContent =
+        file.mimeType + " • " + formatSize(file.size);
+
+      item.append(name, info);
+
+      const previewButton = document.createElement("button");
+      previewButton.textContent = "Visualizar / abrir";
+      previewButton.addEventListener("click", () => previewFile(file));
+      item.append(previewButton);
+
+      if (!file.mimeType.startsWith("application/vnd.google-apps.")) {
+        const downloadButton = document.createElement("button");
+        downloadButton.className = "secondary";
+        downloadButton.textContent = "Baixar";
+
+        downloadButton.addEventListener("click", async () => {
+          try {
+            downloadButton.disabled = true;
+            downloadButton.textContent = "Baixando...";
+            await downloadFile(file);
+          } catch (error) {
+            setStatus(error.message);
+          } finally {
+            downloadButton.disabled = false;
+            downloadButton.textContent = "Baixar";
+          }
+        });
+
+        item.append(downloadButton);
+      }
+
+      if (file.webViewLink) {
+        const openLink = document.createElement("a");
+        openLink.href = file.webViewLink;
+        openLink.target = "_blank";
+        openLink.rel = "noopener noreferrer";
+        openLink.textContent = " Abrir no Google Drive";
+        item.append(openLink);
+      }
+
+      const trashButton = document.createElement("button");
+      trashButton.className = "danger";
+      trashButton.textContent = "Mover para lixeira";
+
+      trashButton.addEventListener("click", async () => {
+        if (!confirm('Mover "' + file.name + '" para a lixeira?')) {
+          return;
+        }
+
+        try {
+          trashButton.disabled = true;
+
+          await apiRequest(
+            "https://www.googleapis.com/drive/v3/files/" +
+              encodeURIComponent(file.id),
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ trashed: true })
+            }
+          );
+
+          setStatus("Arquivo movido para a lixeira.");
+          await showFiles();
+        } catch (error) {
+          setStatus(error.message);
+          trashButton.disabled = false;
+        }
+      });
+
+      item.append(trashButton);
+      container.append(item);
+    }
+
+    if (data.nextPageToken) {
+      const note = document.createElement("p");
+      note.textContent =
+        "Mostrando os primeiros 100 arquivos.";
+      container.append(note);
+    }
+  }
+
+  function formatSize(size) {
+    if (size === undefined) return "Tamanho não informado";
+
+    const bytes = Number(size);
+    if (bytes < 1024) return bytes + " bytes";
+    if (bytes < 1024 * 1024) {
+      return (bytes / 1024).toFixed(1) + " KB";
+    }
+    if (bytes < 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    }
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+
+  async function getFileBlob(file) {
+    const response = await apiRequest(
+      "https://www.googleapis.com/drive/v3/files/" +
+        encodeURIComponent(file.id) + "?alt=media"
+    );
+
+    return await response.blob();
+  }
+
+  async function downloadFile(file) {
+    const blob = await getFileBlob(file);
+    const url = URL.createObjectURL(blob);
+    objectUrls.push(url);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+  }
+
+  async function previewFile(file) {
+    const container = $("preview");
+    container.textContent = "Carregando visualização...";
+
+    try {
+      if (file.mimeType.startsWith("application/vnd.google-apps.")) {
+        container.replaceChildren();
+
+        if (file.webViewLink) {
+          const link = document.createElement("a");
+          link.href = file.webViewLink;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Abrir este arquivo no Google Drive";
+          container.append(link);
+        } else {
+          container.textContent =
+            "Este tipo de arquivo deve ser aberto no Google Drive.";
+        }
         return;
       }
 
-      accessToken = response.access_token;
-      generation++;
+      const blob = await getFileBlob(file);
+      const url = URL.createObjectURL(blob);
+      objectUrls.push(url);
+      container.replaceChildren();
 
-      connect.hidden = true;
-      refresh.hidden = false;
-      disconnect.hidden = false;
+      if (file.mimeType.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = file.name;
+        container.append(img);
+      } else if (file.mimeType === "application/pdf") {
+        const frame = document.createElement("iframe");
+        frame.src = url;
+        frame.title = file.name;
+        container.append(frame);
+      } else if (file.mimeType.startsWith("audio/")) {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = url;
+        container.append(audio);
+      } else if (file.mimeType.startsWith("video/")) {
+        const video = document.createElement("video");
+        video.controls = true;
+        video.src = url;
+        container.append(video);
+      } else if (file.mimeType.startsWith("text/")) {
+        const text = await blob.text();
+        const pre = document.createElement("pre");
+        pre.style.whiteSpace = "pre-wrap";
+        pre.textContent = text;
+        container.append(pre);
+      } else {
+        const message = document.createElement("p");
+        message.textContent =
+          "Não há visualização para este formato. Você pode baixar o arquivo.";
+        container.append(message);
+      }
 
-      await loadFiles();
-    },
+      const downloadButton = document.createElement("button");
+      downloadButton.textContent = "Baixar arquivo";
+      downloadButton.addEventListener("click", () => downloadFile(file));
+      container.append(downloadButton);
+    } catch (error) {
+      container.textContent = "Erro ao abrir arquivo: " + error.message;
+      setStatus(error.message);
+    }
+  }
 
-    error_callback: (error) => {
-      setStatus("Erro de autenticação: " + (error.message || error.type));
+  uploadButton.addEventListener("click", async () => {
+    const selected = $("uploadFiles").files;
+
+    if (!selected || selected.length === 0) {
+      setStatus("Escolha pelo menos um arquivo para enviar.");
+      return;
+    }
+
+    uploadButton.disabled = true;
+
+    try {
+      for (const file of selected) {
+        setStatus("Enviando: " + file.name);
+
+        const metadata = {
+          name: file.name,
+          mimeType: file.type || "application/octet-stream"
+        };
+
+        const boundary = "nuvem_upload_boundary_93f2";
+        const body = new Blob([
+          "--" + boundary + "\r\n",
+          "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+          JSON.stringify(metadata) + "\r\n",
+          "--" + boundary + "\r\n",
+          "Content-Type: " +
+            (file.type || "application/octet-stream") +
+            "\r\n\r\n",
+          file,
+          "\r\n--" + boundary + "--"
+        ]);
+
+        await apiRequest(
+          "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "multipart/related; boundary=" + boundary
+            },
+            body
+          }
+        );
+      }
+
+      $("uploadFiles").value = "";
+      setStatus("Envio concluído!");
+      await showFiles();
+    } catch (error) {
+      setStatus("Erro no envio: " + error.message);
+    } finally {
+      uploadButton.disabled = !accessToken;
     }
   });
 
-  connect.disabled = false;
-  connect.textContent = "Conectar Google Drive";
-
-  if (remember.checked) {
-    setStatus(
-      "Preferência lembrada neste navegador. Clique para reconectar ao Google Drive."
-    );
-  } else {
-    setStatus("Pronto para conectar.");
-  }
-}
-
-connect.addEventListener("click", () => {
-  if (tokenClient) tokenClient.requestAccessToken();
-});
-
-refresh.addEventListener("click", loadFiles);
-
-disconnect.addEventListener("click", () => {
-  generation++;
-
-  if (accessToken && window.google?.accounts?.oauth2) {
-    google.accounts.oauth2.revoke(accessToken, () => {});
+  // O script do Google é carregado de forma assíncrona.
+  function waitForGoogle() {
+    if (window.google?.accounts?.oauth2) {
+      initializeGoogle();
+    } else {
+      setTimeout(waitForGoogle, 200);
+    }
   }
 
-  accessToken = null;
-  clearFiles();
-
-  connect.hidden = false;
-  refresh.hidden = true;
-  disconnect.hidden = true;
-
-  setStatus("Desconectado. Clique em Conectar para acessar novamente.");
-});
-
-let attempts = 0;
-
-const waitForGoogle = setInterval(() => {
-  attempts++;
-
-  if (window.google?.accounts?.oauth2) {
-    clearInterval(waitForGoogle);
-    initialize();
-  } else if (attempts >= 50) {
-    clearInterval(waitForGoogle);
-    setStatus("Não foi possível carregar a autenticação. Atualize a página.");
-  }
-}, 200);
+  waitForGoogle();
+})();
 </script>
 </body>
 </html>
