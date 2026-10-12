@@ -2,162 +2,175 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#101827">
-  <title>Minha Nuvem</title>
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #101827;
-      color: #f1f5f9;
-    }
-
-    header {
-      padding: 24px;
-      border-bottom: 1px solid #293548;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      background: #2563eb;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 24px;
-    }
-
-    h1, h2, p { margin-top: 0; }
-    h1 { margin-bottom: 5px; font-size: 24px; }
-    header p { margin-bottom: 0; color: #aab7ca; }
-
-    main {
-      width: min(900px, 100%);
-      margin: auto;
-      padding: 28px 20px;
-    }
-
-    .welcome { margin-bottom: 28px; }
-    .welcome p { color: #aab7ca; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      background: #192538;
-      border: 1px solid #34445b;
-      border-radius: 16px;
-      padding: 22px;
-    }
-
-    .card-icon { font-size: 32px; margin-bottom: 14px; }
-    .card p { color: #aab7ca; line-height: 1.5; }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border: 0;
-      border-radius: 10px;
-      background: #3478f6;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover { background: #2563eb; }
-
-    .notice {
-      margin-top: 24px;
-      padding: 16px;
-      background: #192538;
-      border-radius: 12px;
-      color: #bdc9da;
-      line-height: 1.6;
-      font-size: 14px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 24px;
-      color: #8392a8;
-      font-size: 13px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha Nuvem</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}
+header,main{max-width:950px;margin:auto;padding:22px}
+header{border-bottom:1px solid #34445b}
+h1{margin:0 0 8px}
+p{color:#bac6d8;line-height:1.5}
+button{border:0;border-radius:9px;padding:12px 16px;background:#3478f6;color:white;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.card{background:#192538;border:1px solid #34445b;border-radius:14px;padding:20px;margin:18px 0}
+#status{white-space:pre-wrap;color:#aab7ca}
+#files{padding:0;list-style:none}
+#files li{padding:12px 0;border-bottom:1px solid #34445b;overflow-wrap:anywhere}
+small{color:#aab7ca}
+</style>
 </head>
 <body>
-  <header>
-    <div class="logo">☁️</div>
-    <div>
-      <h1>Minha Nuvem</h1>
-      <p>Seu espaço pessoal de arquivos</p>
-    </div>
-  </header>
+<header>
+  <h1>☁️ Minha Nuvem</h1>
+  <p>Seus arquivos, em um só lugar.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>Google Drive</h2>
+    <p>Conecte sua conta para consultar seus arquivos. Esta versão usa acesso somente de leitura.</p>
+    <button id="connect" disabled>Carregando autenticação…</button>
+    <button id="refresh" hidden>Atualizar arquivos</button>
+    <p id="status" role="status">Carregando biblioteca do Google…</p>
+  </section>
+  <section class="card">
+    <h2>Seus arquivos</h2>
+    <ul id="files"></ul>
+  </section>
+  <section class="card">
+    <h2>TeraBox</h2>
+    <p>A integração direta ainda não foi configurada. Não informe sua senha aqui.</p>
+  </section>
+  <small>Os arquivos permanecem na sua conta Google. Este site não armazena suas senhas.</small>
+</main>
+<script>
+const CLIENT_ID = "682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
+const SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+let tokenClient;
+let accessToken = null;
 
-  <main>
-    <section class="welcome">
-      <h2>Olá! 👋</h2>
-      <p>Escolha um serviço para acessar seus arquivos.</p>
-    </section>
+const connect = document.getElementById("connect");
+const refresh = document.getElementById("refresh");
+const status = document.getElementById("status");
+const files = document.getElementById("files");
 
-    <section class="grid">
-      <article class="card">
-        <div class="card-icon">🔺</div>
-        <h2>Google Drive</h2>
-        <p>Acesse seus documentos, fotos e outros arquivos.</p>
-        <button onclick="abrir('https://drive.google.com/')">
-          Abrir Google Drive
-        </button>
-      </article>
+function setStatus(message) {
+  status.textContent = message;
+}
 
-      <article class="card">
-        <div class="card-icon">☁️</div>
-        <h2>OneDrive</h2>
-        <p>Consulte seus arquivos armazenados na Microsoft.</p>
-        <button onclick="abrir('https://onedrive.live.com/')">
-          Abrir OneDrive
-        </button>
-      </article>
-
-      <article class="card">
-        <div class="card-icon">🔒</div>
-        <h2>Proton Drive</h2>
-        <p>Acesse seus arquivos com a proteção do Proton.</p>
-        <button onclick="abrir('https://drive.proton.me/')">
-          Abrir Proton Drive
-        </button>
-      </article>
-
-      <article class="card">
-        <div class="card-icon">📦</div>
-        <h2>TeraBox</h2>
-        <p>Consulte os arquivos da sua conta TeraBox.</p>
-        <button onclick="abrir('https://www.terabox.com/')">
-          Abrir TeraBox
-        </button>
-      </article>
-    </section>
-
-    <div class="notice">
-      🔐 <strong>Privacidade:</strong> esta página é apenas uma central
-      de acesso. Seus arquivos continuam nas contas de cada serviço.
-      Não insira senhas ou chaves privadas nesta página.
-    </div>
-  </main>
-
-  <footer>Minha Nuvem · Central pessoal de armazenamento</footer>
-
-  <script>
-    function abrir(url) {
-      window.open(url, "_blank", "noopener,noreferrer");
+function showFiles(items) {
+  files.replaceChildren();
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.textContent = "Nenhum arquivo encontrado.";
+    files.appendChild(li);
+    return;
+  }
+  for (const file of items) {
+    const li = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = file.name || "Arquivo sem nome";
+    li.appendChild(name);
+    li.appendChild(document.createElement("br"));
+    const detail = document.createElement("small");
+    detail.textContent = file.mimeType || "Tipo desconhecido";
+    li.appendChild(detail);
+    if (file.webViewLink) {
+      li.appendChild(document.createElement("br"));
+      const link = document.createElement("a");
+      link.href = file.webViewLink;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Abrir no Google Drive";
+      link.style.color = "#8bb8ff";
+      li.appendChild(link);
     }
-  </script>
+    files.appendChild(li);
+  }
+}
+
+async function loadFiles() {
+  if (!accessToken) return;
+  setStatus("Buscando arquivos…");
+  refresh.disabled = true;
+  try {
+    let allFiles = [];
+    let pageToken;
+    do {
+      const url = new URL("https://www.googleapis.com/drive/v3/files");
+      url.searchParams.set("pageSize", "100");
+      url.searchParams.set("orderBy", "name");
+      url.searchParams.set("fields", "nextPageToken,files(id,name,mimeType,webViewLink)");
+      url.searchParams.set("q", "trashed = false");
+      if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+      const response = await fetch(url, {
+        headers: { Authorization: "Bearer " + accessToken }
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error?.message || "Erro HTTP " + response.status);
+      }
+      const data = await response.json();
+      allFiles = allFiles.concat(data.files || []);
+      pageToken = data.nextPageToken;
+    } while (pageToken);
+
+    showFiles(allFiles);
+    setStatus("Encontrados " + allFiles.length + " arquivo(s).");
+  } catch (error) {
+    setStatus("Não foi possível listar os arquivos: " + error.message);
+  } finally {
+    refresh.disabled = false;
+  }
+}
+
+function initialize() {
+  if (!window.google?.accounts?.oauth2) {
+    setStatus("A biblioteca de autenticação não carregou. Atualize a página ou tente outra rede.");
+    return;
+  }
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPE,
+    callback: async (response) => {
+      if (response.error) {
+        setStatus("Autorização não concluída: " + response.error);
+        return;
+      }
+      accessToken = response.access_token;
+      connect.hidden = true;
+      refresh.hidden = false;
+      await loadFiles();
+    },
+    error_callback: (error) => {
+      setStatus("Erro de autenticação: " + (error.message || error.type));
+    }
+  });
+
+  connect.disabled = false;
+  connect.textContent = "Conectar Google Drive";
+  setStatus("Pronto para conectar.");
+}
+
+connect.addEventListener("click", () => {
+  if (tokenClient) tokenClient.requestAccessToken();
+});
+refresh.addEventListener("click", loadFiles);
+
+const waitForGoogle = setInterval(() => {
+  if (window.google?.accounts?.oauth2) {
+    clearInterval(waitForGoogle);
+    initialize();
+  }
+}, 200);
+setTimeout(() => {
+  clearInterval(waitForGoogle);
+  if (!tokenClient) setStatus("Não foi possível carregar a autenticação do Google. Recarregue a página.");
+}, 10000);
+</script>
 </body>
 </html>
