@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Minha Nuvem Pessoal</title>
-
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
@@ -19,16 +18,8 @@
       color: #f2f3f7;
     }
 
-    main {
-      max-width: 950px;
-      margin: auto;
-    }
-
-    h1 { margin-bottom: 8px; }
-
-    .subtitle, #status {
-      color: #b8bdca;
-    }
+    main { max-width: 950px; margin: auto; }
+    .subtitle, #status, .file-info { color: #b8bdca; }
 
     .panel {
       background: #1b1f2a;
@@ -47,33 +38,15 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      display: inline-block;
-      font-size: 14px;
     }
 
-    button:hover, .file-button:hover {
-      filter: brightness(1.15);
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
+    button:hover { filter: brightness(1.15); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
     .secondary { background: #343b4d; }
     .danger { background: #b83245; }
     .green { background: #18865a; }
 
-    input[type="file"] {
-      max-width: 100%;
-      margin: 10px 0;
-    }
-
-    .remember {
-      display: block;
-      margin: 14px 0;
-      color: #e1e5ef;
-    }
+    .remember { display: block; margin: 14px 0; }
 
     .file {
       background: #222735;
@@ -84,16 +57,17 @@
       overflow-wrap: anywhere;
     }
 
-    .file-name {
+    .file-name { font-weight: bold; margin-bottom: 6px; }
+    .file-info { font-size: 13px; margin-bottom: 8px; }
+    .shared-label {
+      display: inline-block;
+      padding: 9px 12px;
+      margin: 4px;
+      border-radius: 8px;
+      background: #343b4d;
+      color: #dce3ff;
       font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 6px;
-    }
-
-    .file-info {
-      color: #aeb7c8;
-      font-size: 13px;
-      margin-bottom: 8px;
+      font-size: 14px;
     }
 
     #preview img, #preview video {
@@ -106,34 +80,23 @@
       width: 100%;
       height: 65vh;
       border: 0;
-      border-radius: 10px;
       background: white;
+      border-radius: 10px;
     }
 
     #preview audio { width: 100%; }
-
-    .hidden { display: none; }
-
     a { color: #a8b9ff; }
-
-    .top-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
+    .top-actions { display: flex; flex-wrap: wrap; gap: 5px; }
   </style>
 </head>
 
 <body>
 <main>
   <h1>☁️ Minha Nuvem Pessoal</h1>
-  <p class="subtitle">
-    Seus arquivos em um só lugar.
-  </p>
+  <p class="subtitle">Seus arquivos em um só lugar.</p>
 
   <section class="panel">
     <h2>Google Drive</h2>
-
     <p id="account">Nenhuma conta conectada.</p>
 
     <label class="remember">
@@ -161,16 +124,12 @@
     <button id="uploadButton" class="green" disabled>
       Enviar para o Drive
     </button>
-    <p class="subtitle">
-      Os arquivos enviados ficam na raiz do seu Google Drive.
-    </p>
+    <p class="subtitle">Os arquivos enviados ficam na raiz do seu Google Drive.</p>
   </section>
 
   <section class="panel">
     <h2>Meus arquivos</h2>
-    <div id="files">
-      Conecte sua conta para visualizar os arquivos.
-    </div>
+    <div id="files">Conecte sua conta para visualizar os arquivos.</div>
   </section>
 
   <section class="panel">
@@ -180,11 +139,10 @@
 
   <section class="panel">
     <h2>TeraBox</h2>
-    <p>
-      A integração direta com o TeraBox ainda não está configurada.
-    </p>
-    <a href="https://www.terabox.com/" target="_blank"
-       rel="noopener noreferrer">Abrir TeraBox</a>
+    <p>A integração direta com o TeraBox ainda não está configurada.</p>
+    <a href="https://www.terabox.com/" target="_blank" rel="noopener noreferrer">
+      Abrir TeraBox
+    </a>
   </section>
 </main>
 
@@ -192,11 +150,9 @@
 (() => {
   "use strict";
 
-  // Seu ID público de cliente OAuth do Google.
   const CLIENT_ID =
     "682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
 
-  // Permissões para listar, enviar e mover arquivos para a lixeira.
   const SCOPES =
     "openid email profile https://www.googleapis.com/auth/drive";
 
@@ -214,10 +170,8 @@
   let connecting = false;
   let objectUrls = [];
 
-  const savedRemember =
+  rememberCheckbox.checked =
     localStorage.getItem("rememberGoogleAccount") === "true";
-
-  rememberCheckbox.checked = savedRemember;
 
   function setStatus(message) {
     $("status").textContent = message;
@@ -232,7 +186,7 @@
       : "Conectar Google Drive";
   }
 
-  function saveAccountPreference() {
+  function savePreference() {
     localStorage.setItem(
       "rememberGoogleAccount",
       rememberCheckbox.checked ? "true" : "false"
@@ -245,39 +199,11 @@
     }
   }
 
-  rememberCheckbox.addEventListener(
-    "change",
-    saveAccountPreference
-  );
+  rememberCheckbox.addEventListener("change", savePreference);
 
   function clearObjectUrls() {
-    for (const url of objectUrls) {
-      URL.revokeObjectURL(url);
-    }
+    objectUrls.forEach(url => URL.revokeObjectURL(url));
     objectUrls = [];
-  }
-
-  function disconnect() {
-    if (accessToken && window.google?.accounts?.oauth2) {
-      google.accounts.oauth2.revoke(accessToken, () => {});
-    }
-
-    accessToken = null;
-    currentEmail = "";
-    connecting = false;
-
-    $("account").textContent = "Nenhuma conta conectada.";
-    $("files").textContent =
-      "Conecte sua conta para visualizar os arquivos.";
-    $("preview").textContent =
-      "Selecione um arquivo para visualizar.";
-
-    clearObjectUrls();
-    updateButtons(false);
-    setStatus("Conta desconectada.");
-
-    // Mantém somente a preferência de lembrar a conta.
-    // Nenhum token é salvo em armazenamento persistente.
   }
 
   async function apiRequest(url, options = {}) {
@@ -288,10 +214,7 @@
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", "Bearer " + accessToken);
 
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
+    const response = await fetch(url, { ...options, headers });
 
     if (response.status === 401) {
       accessToken = null;
@@ -302,15 +225,13 @@
     }
 
     if (!response.ok) {
-      let detail = "";
+      let message = "";
       try {
-        const errorData = await response.json();
-        detail = errorData.error?.message || "";
+        const data = await response.json();
+        message = data.error?.message || "";
       } catch (_) {}
 
-      throw new Error(
-        detail || "Erro na API do Google: " + response.status
-      );
+      throw new Error(message || "Erro do Google: " + response.status);
     }
 
     return response;
@@ -330,8 +251,6 @@
 
     if (rememberCheckbox.checked && currentEmail) {
       localStorage.setItem("rememberedGoogleEmail", currentEmail);
-    } else {
-      localStorage.removeItem("rememberedGoogleEmail");
     }
   }
 
@@ -339,12 +258,12 @@
     connecting = false;
 
     if (response.error || !response.access_token) {
-      setStatus("Não foi possível conectar. Tente novamente.");
+      accessToken = null;
       updateButtons(false);
+      setStatus("O Google precisa que você conecte a conta novamente.");
       return;
     }
 
-    // O token fica apenas na memória desta página.
     accessToken = response.access_token;
     updateButtons(true);
     setStatus("Conectando ao Google Drive...");
@@ -360,7 +279,8 @@
 
   function onAuthError(error) {
     connecting = false;
-    console.error("Erro de autenticação:", error);
+    console.warn("Autorização do Google:", error);
+    updateButtons(false);
     setStatus(
       "Não foi possível reconectar automaticamente. " +
       "Clique em Conectar Google Drive."
@@ -381,14 +301,12 @@
       error_callback: onAuthError
     });
 
-    setStatus("Pronto para conectar.");
-
-    // Tenta recuperar a autorização anterior quando a opção está ativa.
-    // O Google pode exigir uma nova interação por segurança.
     const rememberedEmail =
       localStorage.getItem("rememberedGoogleEmail");
 
     if (rememberCheckbox.checked && rememberedEmail) {
+      // Tenta recuperar a autorização anterior.
+      // O Google pode exigir um clique por segurança.
       setStatus("Tentando reconectar à conta lembrada...");
       connecting = true;
 
@@ -397,12 +315,12 @@
           prompt: "",
           login_hint: rememberedEmail
         });
-      } catch (error) {
+      } catch (_) {
         connecting = false;
-        setStatus(
-          "Clique em Conectar Google Drive para continuar."
-        );
+        setStatus("Clique em Conectar Google Drive para entrar.");
       }
+    } else {
+      setStatus("Pronto para conectar.");
     }
   }
 
@@ -415,13 +333,12 @@
     if (connecting) return;
 
     connecting = true;
-    saveAccountPreference();
-    setStatus("Abrindo autorização do Google...");
+    savePreference();
+    setStatus("Solicitando acesso ao Google...");
 
-    const rememberedEmail =
-      rememberCheckbox.checked
-        ? localStorage.getItem("rememberedGoogleEmail")
-        : null;
+    const rememberedEmail = rememberCheckbox.checked
+      ? localStorage.getItem("rememberedGoogleEmail")
+      : null;
 
     tokenClient.requestAccessToken({
       prompt: rememberedEmail ? "" : "consent",
@@ -429,7 +346,21 @@
     });
   });
 
-  disconnectButton.addEventListener("click", disconnect);
+  disconnectButton.addEventListener("click", () => {
+    if (accessToken && window.google?.accounts?.oauth2) {
+      google.accounts.oauth2.revoke(accessToken, () => {});
+    }
+
+    accessToken = null;
+    currentEmail = "";
+    connecting = false;
+    $("account").textContent = "Nenhuma conta conectada.";
+    $("files").textContent = "Conecte sua conta para visualizar os arquivos.";
+    $("preview").textContent = "Selecione um arquivo para visualizar.";
+    clearObjectUrls();
+    updateButtons(false);
+    setStatus("Conta desconectada.");
+  });
 
   refreshButton.addEventListener("click", async () => {
     try {
@@ -441,27 +372,39 @@
     }
   });
 
+  function formatSize(size) {
+    if (size === undefined) return "Tamanho não informado";
+    const bytes = Number(size);
+
+    if (bytes < 1024) return bytes + " bytes";
+    if (bytes < 1024 ** 2) return (bytes / 1024).toFixed(1) + " KB";
+    if (bytes < 1024 ** 3) return (bytes / 1024 ** 2).toFixed(1) + " MB";
+    return (bytes / 1024 ** 3).toFixed(2) + " GB";
+  }
+
   async function showFiles() {
     $("files").textContent = "Carregando arquivos...";
     clearObjectUrls();
 
-    const query = new URLSearchParams({
+    const params = new URLSearchParams({
       q: "trashed = false",
       pageSize: "100",
       orderBy: "name",
       fields:
-        "files(id,name,mimeType,size,modifiedTime,webViewLink),nextPageToken"
+        "files(id,name,mimeType,size,modifiedTime,webViewLink," +
+        "sharedWithMeTime,owners(me,emailAddress,displayName)," +
+        "capabilities(canTrash)),nextPageToken"
     });
 
     const response = await apiRequest(
-      "https://www.googleapis.com/drive/v3/files?" + query
+      "https://www.googleapis.com/drive/v3/files?" + params
     );
 
     const data = await response.json();
     const container = $("files");
     container.replaceChildren();
 
-    if (!data.files || data.files.length === 0) {
+    if (!data.files?.length) {
       container.textContent = "Nenhum arquivo encontrado.";
       return;
     }
@@ -508,68 +451,66 @@
       }
 
       if (file.webViewLink) {
-        const openLink = document.createElement("a");
-        openLink.href = file.webViewLink;
-        openLink.target = "_blank";
-        openLink.rel = "noopener noreferrer";
-        openLink.textContent = " Abrir no Google Drive";
-        item.append(openLink);
+        const link = document.createElement("a");
+        link.href = file.webViewLink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = " Abrir no Google Drive";
+        item.append(link);
       }
 
-      const trashButton = document.createElement("button");
-      trashButton.className = "danger";
-      trashButton.textContent = "Mover para lixeira";
+      const owners = file.owners || [];
+      const ownedByMe = owners.some(owner => owner.me === true);
+      const sharedWithMe =
+        Boolean(file.sharedWithMeTime) ||
+        (owners.length > 0 && !ownedByMe);
 
-      trashButton.addEventListener("click", async () => {
-        if (!confirm('Mover "' + file.name + '" para a lixeira?')) {
-          return;
-        }
+      // Arquivos recebidos de outras pessoas não mostram a opção de lixeira.
+      if (sharedWithMe || file.capabilities?.canTrash !== true) {
+        const label = document.createElement("span");
+        label.className = "shared-label";
+        label.textContent = "Compartilhado";
+        item.append(label);
+      } else {
+        const trashButton = document.createElement("button");
+        trashButton.className = "danger";
+        trashButton.textContent = "Mover para lixeira";
 
-        try {
-          trashButton.disabled = true;
+        trashButton.addEventListener("click", async () => {
+          if (!confirm('Mover "' + file.name + '" para a lixeira?')) return;
 
-          await apiRequest(
-            "https://www.googleapis.com/drive/v3/files/" +
-              encodeURIComponent(file.id),
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ trashed: true })
-            }
-          );
+          try {
+            trashButton.disabled = true;
 
-          setStatus("Arquivo movido para a lixeira.");
-          await showFiles();
-        } catch (error) {
-          setStatus(error.message);
-          trashButton.disabled = false;
-        }
-      });
+            await apiRequest(
+              "https://www.googleapis.com/drive/v3/files/" +
+                encodeURIComponent(file.id),
+              {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ trashed: true })
+              }
+            );
 
-      item.append(trashButton);
+            setStatus("Arquivo movido para a lixeira.");
+            await showFiles();
+          } catch (error) {
+            setStatus(error.message);
+            trashButton.disabled = false;
+          }
+        });
+
+        item.append(trashButton);
+      }
+
       container.append(item);
     }
 
     if (data.nextPageToken) {
       const note = document.createElement("p");
-      note.textContent =
-        "Mostrando os primeiros 100 arquivos.";
+      note.textContent = "Mostrando os primeiros 100 arquivos.";
       container.append(note);
     }
-  }
-
-  function formatSize(size) {
-    if (size === undefined) return "Tamanho não informado";
-
-    const bytes = Number(size);
-    if (bytes < 1024) return bytes + " bytes";
-    if (bytes < 1024 * 1024) {
-      return (bytes / 1024).toFixed(1) + " KB";
-    }
-    if (bytes < 1024 * 1024 * 1024) {
-      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-    }
-    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
   }
 
   async function getFileBlob(file) {
@@ -578,7 +519,7 @@
         encodeURIComponent(file.id) + "?alt=media"
     );
 
-    return await response.blob();
+    return response.blob();
   }
 
   async function downloadFile(file) {
@@ -642,10 +583,9 @@
         video.src = url;
         container.append(video);
       } else if (file.mimeType.startsWith("text/")) {
-        const text = await blob.text();
         const pre = document.createElement("pre");
         pre.style.whiteSpace = "pre-wrap";
-        pre.textContent = text;
+        pre.textContent = await blob.text();
         container.append(pre);
       } else {
         const message = document.createElement("p");
@@ -667,7 +607,7 @@
   uploadButton.addEventListener("click", async () => {
     const selected = $("uploadFiles").files;
 
-    if (!selected || selected.length === 0) {
+    if (!selected?.length) {
       setStatus("Escolha pelo menos um arquivo para enviar.");
       return;
     }
@@ -678,20 +618,16 @@
       for (const file of selected) {
         setStatus("Enviando: " + file.name);
 
-        const metadata = {
-          name: file.name,
-          mimeType: file.type || "application/octet-stream"
-        };
-
+        const metadata = { name: file.name };
         const boundary = "nuvem_upload_boundary_93f2";
+
         const body = new Blob([
           "--" + boundary + "\r\n",
           "Content-Type: application/json; charset=UTF-8\r\n\r\n",
           JSON.stringify(metadata) + "\r\n",
           "--" + boundary + "\r\n",
           "Content-Type: " +
-            (file.type || "application/octet-stream") +
-            "\r\n\r\n",
+            (file.type || "application/octet-stream") + "\r\n\r\n",
           file,
           "\r\n--" + boundary + "--"
         ]);
@@ -718,7 +654,6 @@
     }
   });
 
-  // O script do Google é carregado de forma assíncrona.
   function waitForGoogle() {
     if (window.google?.accounts?.oauth2) {
       initializeGoogle();
