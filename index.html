@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#1769ff">
 <title>MXDrive — Sua nuvem pessoal</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root {
@@ -123,10 +124,39 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}
 }
 @media(max-width:390px){.welcome-art{display:none}.file-grid{grid-template-columns:1fr}.file-preview{height:145px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top right,#dceaff,transparent 42%),#f5f7fb}
+.auth-card{width:min(430px,100%);padding:32px;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 18px 55px #263e6612}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:25px}.auth-brand .brand-icon{flex-shrink:0}
+.auth-card h1{font-size:25px;letter-spacing:-.6px;margin:0 0 8px}.auth-intro{font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 23px}
+.auth-field{display:grid;gap:7px;margin:14px 0}.auth-field label{font-size:12px;font-weight:750;color:#4b5870}
+.auth-field input{width:100%;height:45px;border:1px solid #dce4f0;border-radius:10px;padding:0 12px;background:#fff}
+.auth-submit{width:100%;height:45px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:750;margin-top:8px}
+.auth-submit:disabled{opacity:.65;cursor:wait}.auth-switch{border:0;background:transparent;color:var(--blue);font-weight:700;padding:12px 4px 0}
+.auth-message{font-size:12px;line-height:1.6;margin-top:12px;color:#b42332;overflow-wrap:anywhere}.auth-message.ok{color:#16834b}
+.auth-security{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.6}
+#mxLogout{display:none;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:white;color:#667187;font-size:12px}
+.app{display:none}.app.authenticated{display:block}
+@media(max-width:480px){.auth-card{padding:24px}}
 </style>
 </head>
 <body>
-<div class="app">
+<section class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="brand-icon">M</div><div class="brand-name">MX<span style="color:var(--blue)">Drive</span></div></div>
+    <h1 id="authTitle">Entrar no MXDrive</h1>
+    <p class="auth-intro" id="authIntro">Entre com sua conta para acessar seu espaço pessoal.</p>
+    <form id="authForm" onsubmit="submitMXAuth(event)">
+      <div class="auth-field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" required placeholder="voce@email.com"></div>
+      <div class="auth-field"><label for="authPassword">Senha</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo de 6 caracteres"></div>
+      <button class="auth-submit" id="authSubmit" type="submit">Entrar</button>
+    </form>
+    <button class="auth-switch" id="authSwitch" type="button" onclick="toggleMXAuthMode()">Criar uma conta</button>
+    <div class="auth-message" id="authMessage" role="status"></div>
+    <div class="auth-security">🔒 A autenticação é gerenciada pelo Supabase. Nunca coloque senhas de usuários no GitHub.</div>
+  </div>
+</section>
+<div class="app" id="mxApp">
 <aside class="sidebar" id="sidebar">
   <div class="brand"><div class="brand-icon">M</div><div class="brand-name">MX<span>Drive</span></div></div>
   <button class="upload-main" onclick="chooseFiles()">＋ &nbsp; Enviar arquivos</button>
@@ -157,6 +187,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}
       <div class="avatar" id="avatar">M</div>
       <div class="account-info"><div class="account-name" id="accountName">Minha conta</div><div class="account-email" id="accountEmail"></div></div>
     </div>
+    <button id="mxLogout" type="button" onclick="logoutMXDrive()">Sair do MXDrive</button>
   </div>
 </header>
 
@@ -206,6 +237,9 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}
 </div>
 
 <script>
+const SUPABASE_URL="https://ehvgixekasdmzuceyjye.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_LsipoOKbUt5Aaw_pUzMgZg_RBLYbNYV";
+let supabaseClient=null, mxAuthMode="login", mxAuthUser=null;
 const CLIENT_ID="682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
 const SCOPES="openid email profile https://www.googleapis.com/auth/drive";
 const API="https://www.googleapis.com/drive/v3";
@@ -216,6 +250,67 @@ let currentSection="files", currentView="grid", currentPreviewFile=null, toastTi
 let silentLoginAttempted=false;
 const $=id=>document.getElementById(id);
 
+async function initMXDriveAuth(){
+  const message=$("authMessage");
+  if(!window.supabase?.createClient){message.textContent="Não foi possível carregar o sistema de login. Atualize a página.";return;}
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+    mxAuthUser=session?.user||null;
+    showMXDriveApp(Boolean(mxAuthUser));
+  });
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error){message.textContent="Erro ao verificar a sessão. Tente novamente.";return;}
+  mxAuthUser=data.session?.user||null;
+  showMXDriveApp(Boolean(mxAuthUser));
+}
+function showMXDriveApp(authed){
+  $("authGate").style.display=authed?"none":"flex";
+  $("mxApp").classList.toggle("authenticated",authed);
+  $("mxLogout").style.display=authed?"inline-block":"none";
+  if(authed){
+    $("authMessage").textContent="";
+    $("accountName").textContent=mxAuthUser?.user_metadata?.name||mxAuthUser?.email||"Minha conta";
+    $("accountEmail").textContent=mxAuthUser?.email||"";
+    $("avatar").textContent=(mxAuthUser?.email||"M").charAt(0).toUpperCase();
+    initializeGoogle();
+  }
+}
+function toggleMXAuthMode(){
+  mxAuthMode=mxAuthMode==="login"?"signup":"login";
+  $("authTitle").textContent=mxAuthMode==="login"?"Entrar no MXDrive":"Criar conta no MXDrive";
+  $("authIntro").textContent=mxAuthMode==="login"?"Entre com sua conta para acessar seu espaço pessoal.":"Crie sua conta para começar a usar o MXDrive.";
+  $("authSubmit").textContent=mxAuthMode==="login"?"Entrar":"Criar conta";
+  $("authSwitch").textContent=mxAuthMode==="login"?"Criar uma conta":"Já tenho uma conta";
+  $("authPassword").autocomplete=mxAuthMode==="login"?"current-password":"new-password";
+  $("authMessage").textContent="";$("authMessage").classList.remove("ok");
+}
+async function submitMXAuth(event){
+  event.preventDefault();
+  if(!supabaseClient){$("authMessage").textContent="O login ainda está carregando. Atualize a página.";return;}
+  const email=$("authEmail").value.trim(),password=$("authPassword").value;
+  const submit=$("authSubmit");submit.disabled=true;submit.textContent="Aguarde...";
+  $("authMessage").textContent="";$("authMessage").classList.remove("ok");
+  try{
+    if(mxAuthMode==="signup"){
+      const {data,error}=await supabaseClient.auth.signUp({email,password});
+      if(error)throw error;
+      if(!data.session){
+        $("authMessage").classList.add("ok");
+        $("authMessage").textContent="Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre.";
+      }else{
+        $("authMessage").classList.add("ok");$("authMessage").textContent="Conta criada com sucesso!";
+      }
+    }else{
+      const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+      if(error)throw error;
+    }
+  }catch(error){$("authMessage").textContent=error.message||"Não foi possível entrar.";}
+  finally{submit.disabled=false;submit.textContent=mxAuthMode==="login"?"Entrar":"Criar conta";}
+}
+async function logoutMXDrive(){
+  if(supabaseClient)await supabaseClient.auth.signOut();
+  logout();$("authEmail").value="";$("authPassword").value="";
+}
 function toast(message){
   const el=$("toast");el.textContent=message;el.classList.add("show");
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3500);
@@ -617,9 +712,7 @@ document.addEventListener("keydown",event=>{if(event.key==="Escape")closePreview
 
 updateAccount();
 renderFiles();
-
-/* Espera o script do Google carregar e tenta autenticar sem abrir a tela de consentimento. */
-window.addEventListener("load",initializeGoogle);
+initMXDriveAuth();
 </script>
 </body>
 </html>
