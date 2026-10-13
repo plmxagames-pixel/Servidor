@@ -346,6 +346,7 @@ async function submitMXAuth(event){
   finally{submit.disabled=false;submit.textContent=mxAuthMode==="login"?"Entrar":"Criar conta";}
 }
 async function logoutMXDrive(){
+  if(vaultKey)lockPasswordVault();
   if(supabaseClient)await supabaseClient.auth.signOut();
   logout();$("authEmail").value="";$("authPassword").value="";
 }
