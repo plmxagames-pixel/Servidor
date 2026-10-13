@@ -508,7 +508,7 @@ async function loadFiles(){
 
 async function loadStorage(){
   try{
-    const response=await apiFetch(API+"/about?fields=storageQuota(user,limit,usage)");
+    const response=await apiFetch(API+"/about?fields=storageQuota(limit,usage)");
     const data=await response.json();updateStorage(data.storageQuota);
   }catch(_){updateStorage(null);}
 }
@@ -520,7 +520,6 @@ function updateStorage(quota){
     return;
   }
   const used=Number(quota.usage||0),limit=Number(quota.limit||0);
-  $("storageFill").style.width+(limit>0?Math.min(100,used/limit*100):0)+"%";
   $("storageFill").style.width=(limit>0?Math.min(100,used/limit*100):0)+"%";
   $("storageNote").textContent=limit>0
     ?formatBytes(used)+" usados de "+formatBytes(limit)
