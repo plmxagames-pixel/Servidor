@@ -1,0 +1,987 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1769ff">
+<title>MXDrive — Sua nuvem pessoal</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --blue:#1769ff; --dark:#1054d8; --light:#edf4ff;
+  --bg:#f5f7fb; --white:#fff; --text:#172033;
+  --muted:#8490a5; --border:#e8edf5; --sidebar:245px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--text);background:var(--bg)}
+button,input{font:inherit}button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #8cb7ff;outline-offset:2px}
+.sidebar{width:var(--sidebar);height:100vh;position:fixed;top:0;left:0;z-index:20;padding:25px 17px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform .25s}
+.brand{display:flex;align-items:center;gap:11px;padding:0 10px;margin-bottom:35px}
+.brand-icon{width:43px;height:43px;border-radius:14px;color:#fff;background:linear-gradient(135deg,#4b9aff,#1555e8);display:grid;place-items:center;font-size:23px;font-weight:800}
+.brand-name{font-size:23px;font-weight:800;letter-spacing:-.8px}.brand-name span{color:var(--blue)}
+.upload-main{border:0;border-radius:12px;padding:14px;margin-bottom:27px;background:var(--blue);color:#fff;font-weight:700;transition:.2s}
+.upload-main:hover{background:var(--dark);transform:translateY(-2px)}
+.menu-label{color:#a0a9b9;font-size:11px;font-weight:800;letter-spacing:1.2px;padding:0 12px;margin-bottom:10px}
+.nav{display:grid;gap:5px}
+.nav-item{width:100%;display:flex;align-items:center;gap:13px;padding:13px 12px;border:0;border-radius:10px;text-align:left;color:#667187;background:transparent;transition:.2s}
+.nav-item:hover,.nav-item.active{color:var(--blue);background:var(--light)}
+.nav-item.active{font-weight:700}.nav-icon{width:23px;text-align:center;font-size:18px}
+.sidebar-bottom{margin-top:auto;padding:17px 10px 0}
+.storage-card{background:#f7f9fd;border:1px solid var(--border);border-radius:13px;padding:14px}
+.storage-title{font-size:12px;font-weight:700;margin-bottom:11px}
+.storage-track{height:6px;background:#e1e8f4;border-radius:10px;overflow:hidden;margin-bottom:9px}
+.storage-fill{width:0;height:100%;background:var(--blue);transition:width .3s}
+.storage-note{color:var(--muted);font-size:11px;line-height:1.5}
+.main{margin-left:var(--sidebar);min-height:100vh}
+.topbar{height:82px;display:flex;align-items:center;gap:20px;padding:0 35px;background:#ffffffed;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(14px)}
+.mobile-menu{display:none;border:0;background:transparent;font-size:24px}
+.search{max-width:610px;flex:1;position:relative}
+.search span{position:absolute;top:50%;left:16px;transform:translateY(-50%);color:#8995a9;font-size:19px}
+.search input{width:100%;height:46px;border:1px solid transparent;border-radius:12px;background:#f3f6fb;padding:0 16px 0 46px}
+.search input:focus{outline:none;background:white;border-color:#a9caff;box-shadow:0 0 0 4px #1769ff10}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+.icon-button{width:42px;height:42px;border:1px solid var(--border);border-radius:12px;background:#fff;color:#68758b;font-size:18px}
+.login-button,.primary-button{border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:700}
+.login-button{padding:12px 18px;white-space:nowrap}.login-button:hover,.primary-button:hover{background:var(--dark)}
+.account{display:none;align-items:center;gap:9px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--light);color:var(--blue);display:grid;place-items:center;font-weight:800}
+.account-info{min-width:0;max-width:180px}.account-name{font-size:12px;font-weight:800}
+.account-email{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.content{max-width:1600px;margin:auto;padding:30px 35px 45px;animation:appear .45s ease}
+@keyframes appear{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.welcome{position:relative;overflow:hidden;padding:31px 34px;min-height:195px;border-radius:20px;background:linear-gradient(110deg,#1558e8,#398bff);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 12px 30px #1769ff20}
+.welcome:before,.welcome:after{content:"";position:absolute;border-radius:50%;border:1px solid #ffffff20;pointer-events:none}
+.welcome:before{width:300px;height:300px;right:50px;top:-180px}
+.welcome:after{width:230px;height:230px;right:-60px;bottom:-150px}
+.welcome-text{position:relative;z-index:1}.welcome-label{font-size:12px;font-weight:800;letter-spacing:1.5px;opacity:.8}
+.welcome h1{font-size:clamp(25px,3vw,35px);letter-spacing:-1px;margin:12px 0 9px}
+.welcome p{margin:0;max-width:500px;color:#e0ebff;font-size:14px;line-height:1.7}
+.welcome-art{position:relative;z-index:1;font-size:75px;padding:0 25px;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:32px 0 18px}
+.section-heading h2{font-size:19px;margin:0}.section-heading p{color:var(--muted);font-size:12px;margin:6px 0 0}
+.view-buttons{display:flex;gap:6px;padding:4px;border-radius:10px;background:#eaf0f8}
+.view-buttons button{width:36px;height:34px;border:0;border-radius:7px;background:transparent;color:#8490a5}
+.view-buttons button.active{color:var(--blue);background:white}
+.file-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px}
+.file-grid.list-view{grid-template-columns:1fr;gap:9px}
+.file-card{min-width:0;background:#fff;border:1px solid var(--border);border-radius:15px;overflow:hidden;transition:.2s;animation:appear .35s ease both}
+.file-card:hover{transform:translateY(-3px);border-color:#d0e0ff;box-shadow:0 9px 25px #263e6610}
+.file-preview{height:135px;background:linear-gradient(145deg,#f2f6ff,#eaf1ff);display:grid;place-items:center;position:relative;overflow:hidden;cursor:pointer}
+.file-preview img{width:100%;height:100%;object-fit:cover}
+.file-symbol{font-size:42px}.file-type-label{position:absolute;bottom:9px;left:10px;padding:4px 7px;border-radius:5px;color:#45618d;background:#ffffffdb;font-size:9px;font-weight:800}
+.file-details{padding:13px}.file-name{font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px}
+.file-meta{color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:8px}
+.file-actions{display:flex;gap:6px;margin-top:13px}
+.file-actions button{flex:1;min-width:0;padding:8px 5px;border-radius:8px;border:1px solid var(--border);color:#667187;background:white;font-size:11px}
+.file-actions button:hover{background:var(--light);color:var(--blue)}
+.file-actions .delete-button:hover{color:#e34d59;background:#fff0f1}
+.list-view .file-card{display:grid;grid-template-columns:66px minmax(0,1fr) auto;align-items:center;padding:10px 14px;gap:14px}
+.list-view .file-preview{width:58px;height:52px;border-radius:9px}
+.list-view .file-symbol{font-size:25px}.list-view .file-type-label{display:none}
+.list-view .file-details{padding:0}.list-view .file-name{margin-bottom:6px}.list-view .file-actions{margin:0}
+.empty-state{display:none;padding:55px 20px;background:#fff;border:1px dashed #d9e3f2;border-radius:16px;text-align:center}
+.empty-icon{font-size:45px}.empty-state h3{margin:13px 0 7px;font-size:17px}
+.empty-state p{margin:0 auto 20px;color:var(--muted);font-size:13px;line-height:1.7;max-width:380px}
+.primary-button{padding:11px 16px}
+.login-panel{padding:19px;margin-top:23px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.login-panel strong{font-size:13px}.login-panel p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.6}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f3ad37;margin-right:6px}
+.status-dot.connected{background:#25bd7a}
+footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-footer{font-size:9px;padding:18px 8px 2px;color:#a0a9b9}
+.vault-section{margin-top:28px;animation:appear .35s ease}.vault-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.vault-heading h2{margin:8px 0;font-size:24px}.vault-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.vault-lock-card,.vault-add-card{max-width:620px;padding:23px;background:#fff;border:1px solid var(--border);border-radius:15px}.vault-lock-card h3,.vault-add-card h3{margin:0 0 9px;font-size:17px}.vault-lock-card>p{font-size:13px;line-height:1.6;color:var(--muted);margin:0 0 18px}
+.vault-label{display:block;font-size:12px;font-weight:750;color:#4b5870;margin:14px 0 7px}.vault-input{width:100%;min-height:43px;border:1px solid #dce4f0;border-radius:9px;padding:10px 12px;background:white;color:var(--text)}.vault-input:focus{outline:3px solid #8cb7ff;outline-offset:1px}
+#vaultKeyButton{margin-top:16px;width:100%;min-height:43px}.vault-message{font-size:12px;line-height:1.6;margin-top:12px;color:#b42332;overflow-wrap:anywhere}.vault-message.ok{color:#16834b}.vault-warning{margin:18px 0 0!important;padding-top:13px;border-top:1px solid var(--border);font-size:11px!important}
+.vault-add-card{max-width:none}.vault-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;margin-bottom:15px}.vault-list-heading{display:flex;align-items:center;justify-content:space-between;margin:27px 0 13px}.vault-list-heading h3{font-size:17px;margin:0}.vault-list-heading span{font-size:12px;color:var(--muted)}
+.vault-list{display:grid;gap:10px}.vault-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;min-width:0}.vault-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.vault-item h4{font-size:14px;margin:0 0 5px;overflow-wrap:anywhere}.vault-item .vault-user{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.vault-item .vault-note{font-size:12px;color:#68758b;margin-top:9px;overflow-wrap:anywhere}.vault-secret-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}.vault-secret{font-family:monospace;font-size:13px;overflow-wrap:anywhere;flex:1;min-width:120px}.vault-actions{display:flex;gap:6px;flex-wrap:wrap}.vault-actions button,.vault-secret-row button{border:1px solid var(--border);background:white;color:#53627a;border-radius:8px;padding:7px 9px;font-size:11px}.vault-actions button:hover,.vault-secret-row button:hover{background:var(--light);color:var(--blue)}.vault-empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #d9e3f2;border-radius:12px;font-size:13px}
+.generator-card{max-width:760px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px}
+.generator-card h2{margin:0 0 8px;font-size:23px}.generator-intro{margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.6}
+.generator-result{display:flex;gap:8px;align-items:stretch;margin:16px 0 20px}
+.generator-result input{min-width:0;flex:1;border:1px solid #dce4f0;border-radius:10px;padding:13px;font:600 16px ui-monospace,SFMono-Regular,Consolas,monospace;background:#f7f9fd;color:var(--text)}
+.generator-result button{border:1px solid var(--border);border-radius:10px;background:white;padding:0 14px;color:#53627a}
+.generator-options{display:grid;grid-template-columns:1fr 1fr;gap:13px 20px;margin:18px 0 22px}
+.generator-option{display:flex;align-items:center;gap:9px;font-size:13px;color:#4b5870}
+.generator-option input{accent-color:var(--blue);width:16px;height:16px}
+.generator-length{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:700}
+.generator-length output{color:var(--blue);font-variant-numeric:tabular-nums}
+#passwordLength{width:100%;accent-color:var(--blue);margin:14px 0 4px}
+.generator-actions{display:flex;gap:9px;flex-wrap:wrap}.generator-actions button{min-height:42px}
+.generator-status{min-height:19px;margin-top:12px;color:#16834b;font-size:12px}
+@media(max-width:520px){.generator-card{padding:17px}.generator-options{grid-template-columns:1fr}.generator-result{flex-wrap:wrap}.generator-result input{flex-basis:100%;width:100%;font-size:14px}.generator-result button{min-height:40px;flex:1}}
+@media(max-width:600px){.vault-heading{align-items:flex-start;flex-direction:column}.vault-form-grid{grid-template-columns:1fr}.vault-lock-card,.vault-add-card{padding:17px}}
+.toast{position:fixed;right:22px;bottom:22px;z-index:100;max-width:calc(100vw - 32px);background:#172033;color:#fff;padding:14px 18px;border-radius:12px;font-size:13px;box-shadow:0 8px 30px #0002;opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateY(0)}
+.modal{display:none;position:fixed;inset:0;z-index:90;padding:20px;background:#101828a8;backdrop-filter:blur(5px);align-items:center;justify-content:center}
+.modal.show{display:flex}.modal-box{width:min(900px,100%);max-height:90vh;overflow:auto;background:white;border-radius:17px;padding:17px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
+.modal-head strong{overflow-wrap:anywhere;font-size:14px}
+.modal-head button{width:35px;height:35px;border:0;border-radius:9px;background:#f1f4f9;font-size:20px}
+.modal-body{display:grid;place-items:center;min-height:180px;overflow:auto}
+.modal-body img,.modal-body video{max-width:100%;max-height:65vh}
+.modal-body iframe{width:100%;height:65vh;border:0}.modal-body pre{white-space:pre-wrap;overflow-wrap:anywhere;width:100%;font-size:13px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
+.secondary-button{border:1px solid var(--border);border-radius:9px;background:white;padding:10px 13px;color:#667187}
+.progress-wrap{display:none;margin-top:15px;padding:14px;background:white;border-radius:12px;border:1px solid var(--border)}
+.progress-track{height:6px;background:#e7edf6;border-radius:10px;overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;width:0;background:var(--blue);transition:width .2s}
+@media(max-width:1250px){.file-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.content{padding:25px}.topbar{padding:0 25px}}
+@media(max-width:900px){:root{--sidebar:225px}.file-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome-art{font-size:55px;padding:0}.account-info{display:none}}
+@media(max-width:680px){
+.sidebar{transform:translateX(-100%);box-shadow:12px 0 35px #0000000d}.sidebar.open{transform:translateX(0)}
+.main{margin-left:0}.topbar{height:70px;padding:0 14px;gap:10px}.mobile-menu{display:block}
+.search input{height:42px;font-size:13px;padding-left:37px}.search span{left:12px}
+.top-actions{gap:7px}.icon-button{display:none}.login-button{padding:11px 12px;font-size:12px}
+.content{padding:19px 14px 30px}.welcome{padding:24px 20px;min-height:170px}
+.welcome h1{font-size:25px}.welcome p{font-size:12px}.welcome-art{font-size:43px}
+.file-grid{gap:10px}.file-preview{height:105px}.file-details{padding:10px}.file-name{font-size:12px}
+.file-actions button{font-size:10px}.list-view .file-card{grid-template-columns:45px minmax(0,1fr);gap:10px;padding:10px}
+.list-view .file-preview{width:43px;height:43px}.list-view .file-actions{grid-column:2}
+.section-heading h2{font-size:17px}.login-panel{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:390px){.welcome-art{display:none}.file-grid{grid-template-columns:1fr}.file-preview{height:145px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at top right,#dceaff,transparent 42%),#f5f7fb}
+.auth-card{width:min(430px,100%);padding:32px;background:#fff;border:1px solid var(--border);border-radius:22px;box-shadow:0 18px 55px #263e6612}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:25px}.auth-brand .brand-icon{flex-shrink:0}
+.auth-card h1{font-size:25px;letter-spacing:-.6px;margin:0 0 8px}.auth-intro{font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 23px}
+.auth-field{display:grid;gap:7px;margin:14px 0}.auth-field label{font-size:12px;font-weight:750;color:#4b5870}
+.auth-field input{width:100%;height:45px;border:1px solid #dce4f0;border-radius:10px;padding:0 12px;background:#fff}
+.auth-submit{width:100%;height:45px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:750;margin-top:8px}
+.auth-submit:disabled{opacity:.65;cursor:wait}.auth-switch{border:0;background:transparent;color:var(--blue);font-weight:700;padding:12px 4px 0}
+.auth-message{font-size:12px;line-height:1.6;margin-top:12px;color:#b42332;overflow-wrap:anywhere}.auth-message.ok{color:#16834b}
+.auth-security{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.6}
+#mxLogout{display:none;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:white;color:#667187;font-size:12px}
+.app{display:none}.app.authenticated{display:block}
+@media(max-width:480px){.auth-card{padding:24px}}
+
+.password-catalog .upload-main,
+.password-catalog .menu-label,
+.password-catalog .storage-card,
+.password-catalog .search,
+.password-catalog #loginButton,
+.password-catalog #account,
+.password-catalog .icon-button,
+.password-catalog #driveWelcome,
+.password-catalog #driveHeading,
+.password-catalog #fileGrid,
+.password-catalog #emptyState,
+.password-catalog #progressWrap,
+.password-catalog #driveLoginPanel {display:none!important}
+.password-catalog .brand {margin-bottom:30px}
+.password-catalog .main {min-height:100vh}
+.password-catalog .content {max-width:1000px}
+.password-catalog .topbar {justify-content:flex-end}
+.password-catalog .nav {margin-top:5px}
+.password-catalog .site-footer {padding-bottom:18px}
+</style>
+</head>
+<body>
+<section class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="brand-icon">M</div><div class="brand-name">MX<span style="color:var(--blue)">Drive</span></div></div>
+    <h1 id="authTitle">Entrar no MXDrive</h1>
+    <p class="auth-intro" id="authIntro">Entre com sua conta para acessar seu espaço pessoal.</p>
+    <form id="authForm" onsubmit="submitMXAuth(event)">
+      <div class="auth-field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" required placeholder="voce@email.com"></div>
+      <div class="auth-field"><label for="authPassword">Senha</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo de 6 caracteres"></div>
+      <button class="auth-submit" id="authSubmit" type="submit">Entrar</button>
+    </form>
+    <button class="auth-switch" id="authSwitch" type="button" onclick="toggleMXAuthMode()">Criar uma conta</button>
+    <div class="auth-message" id="authMessage" role="status"></div>
+    <div class="auth-security">🔒 A autenticação é gerenciada pelo Supabase. Nunca coloque senhas de usuários no GitHub.</div>
+  </div>
+</section>
+<div class="app password-catalog" id="mxApp">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-icon">🔐</div><div class="brand-name">MX<span>Senhas</span></div></div>
+  <button class="upload-main" onclick="chooseFiles()">＋ &nbsp; Enviar arquivos</button>
+  <div class="menu-label">CATÁLOGO DE SENHAS</div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="openPasswordGenerator(this)"><span class="nav-icon">🛡️</span>Gerar senha segura</button>
+    <button class="nav-item" onclick="openPasswordVault(this)"><span class="nav-icon">🔐</span>Minhas senhas</button>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="storage-card">
+      <div class="storage-title">☁️ Armazenamento</div>
+      <div class="storage-track"><div class="storage-fill" id="storageFill"></div></div>
+      <div class="storage-note" id="storageNote">Conecte sua conta Google para ver seus arquivos.</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <button class="mobile-menu" onclick="toggleSidebar()" aria-label="Abrir menu">☰</button>
+  <div class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Pesquisar arquivos..." oninput="renderFiles()"></div>
+  <div class="top-actions">
+    <button class="icon-button" title="Atualizar arquivos" onclick="loadFiles()">↻</button>
+    <button class="login-button" id="loginButton" onclick="login()">Entrar com Google</button>
+    <div class="account" id="account">
+      <div class="avatar" id="avatar">M</div>
+      <div class="account-info"><div class="account-name" id="accountName">Minha conta</div><div class="account-email" id="accountEmail"></div></div>
+    </div>
+    <button id="mxLogout" type="button" onclick="logoutMXDrive()">Sair do MXDrive</button>
+  </div>
+</header>
+
+<div class="content">
+  <section class="welcome" id="driveWelcome">
+    <div class="welcome-text">
+      <div class="welcome-label">SUA NUVEM PESSOAL</div>
+      <h1>Bem-vindo ao MXDrive!</h1>
+      <p>Seus arquivos em um só lugar. Guarde, encontre e acesse seus documentos com facilidade.</p>
+    </div>
+    <div class="welcome-art" aria-hidden="true">☁️</div>
+  </section>
+
+  <div class="section-heading" id="driveHeading">
+    <div><h2 id="sectionTitle">Meus arquivos</h2><p id="fileCount">Entre com sua conta para começar</p></div>
+    <div class="view-buttons"><button id="gridButton" class="active" onclick="setView('grid')" title="Grade">▦</button><button id="listButton" onclick="setView('list')" title="Lista">☷</button></div>
+  </div>
+
+  <div class="file-grid" id="fileGrid"></div>
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon" id="emptyIcon">☁️</div><h3 id="emptyTitle">Sua nuvem está pronta!</h3>
+    <p id="emptyMessage">Entre com sua conta Google para ver e gerenciar seus arquivos.</p>
+    <button class="primary-button" id="emptyButton" onclick="login()">Conectar Google Drive</button>
+  </div>
+  <div class="progress-wrap" id="progressWrap">
+    <div id="progressText">Enviando arquivos...</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <section class="login-panel" id="driveLoginPanel">
+    <div><strong><span class="status-dot" id="statusDot"></span><span id="connectionTitle">Google Drive desconectado</span></strong><p id="connectionText">Entre com sua conta Google para acessar seus arquivos.</p></div>
+    <button class="primary-button" id="connectionButton" onclick="login()">Conectar conta</button>
+  </section>
+  <section class="vault-section" id="passwordVaultSection" style="display:none">
+    <div class="vault-heading"><div><div class="welcome-label" style="color:var(--blue)">PROTEGIDO POR CRIPTOGRAFIA</div><h2>🔐 Minhas senhas</h2><p>Suas senhas ficam criptografadas antes de serem salvas na nuvem.</p></div><button class="secondary-button" onclick="lockPasswordVault()">Bloquear cofre</button></div>
+    <div class="vault-lock-card" id="vaultLockCard">
+      <h3 id="vaultLockTitle">Desbloquear cofre</h3><p id="vaultLockText">Digite sua senha mestra para acessar suas senhas salvas.</p>
+      <form id="vaultKeyForm" onsubmit="submitVaultKey(event)">
+        <label class="vault-label" for="vaultMasterPassword">Senha mestra</label>
+        <input class="vault-input" id="vaultMasterPassword" type="password" autocomplete="current-password" minlength="12" required placeholder="Use pelo menos 12 caracteres">
+        <div id="vaultConfirmWrap" style="display:none"><label class="vault-label" for="vaultMasterConfirm">Confirme a senha mestra</label><input class="vault-input" id="vaultMasterConfirm" type="password" autocomplete="new-password" minlength="12" placeholder="Digite a mesma senha"></div>
+        <button class="primary-button" id="vaultKeyButton" type="submit">Desbloquear</button>
+      </form>
+      <div class="vault-message" id="vaultMessage" role="status"></div>
+      <p class="vault-warning">Importante: se você esquecer a senha mestra, não será possível recuperar as senhas criptografadas. Guarde-a em um lugar seguro.</p>
+    </div>
+    <div id="vaultUnlocked" style="display:none">
+      <form class="vault-add-card" id="vaultEntryForm" onsubmit="addVaultEntry(event)">
+        <h3>Adicionar senha</h3>
+        <div class="vault-form-grid">
+          <div><label class="vault-label" for="vaultSite">Site ou serviço *</label><input class="vault-input" id="vaultSite" required maxlength="150" placeholder="Ex.: Minecraft"></div>
+          <div><label class="vault-label" for="vaultUsername">Usuário ou e-mail</label><input class="vault-input" id="vaultUsername" maxlength="200" autocomplete="off" placeholder="Seu usuário"></div>
+          <div><label class="vault-label" for="vaultEntryPassword">Senha *</label><input class="vault-input" id="vaultEntryPassword" required maxlength="2000" autocomplete="new-password" placeholder="Senha da conta"></div>
+          <div><label class="vault-label" for="vaultNote">Observação</label><input class="vault-input" id="vaultNote" maxlength="500" placeholder="Opcional"></div>
+        </div>
+        <button class="primary-button" type="submit">＋ Salvar senha</button>
+      </form>
+      <div class="vault-list-heading"><h3>Senhas salvas</h3><span id="vaultEntryCount">0 itens</span></div>
+      <div class="vault-list" id="vaultEntryList"></div>
+      <div class="vault-message" id="vaultSaveMessage" role="status"></div>
+    </div>
+  </section>
+  <section class="vault-section" id="passwordGeneratorSection" style="display:block">
+    <div class="generator-card">
+      <div class="welcome-label" style="color:var(--blue)">GERADOR DE SENHAS</div>
+      <h2>🛡️ Senha segura</h2>
+      <p class="generator-intro">Crie uma senha aleatória forte, como os geradores de senhas dos navegadores. A senha é criada neste navegador e não é enviada para o MXDrive.</p>
+      <div class="generator-length"><label for="passwordLength">Comprimento da senha</label><output id="passwordLengthValue" for="passwordLength">16 caracteres</output></div>
+      <input id="passwordLength" type="range" min="8" max="64" step="1" value="16" oninput="updatePasswordLength()">
+      <div class="generator-options">
+        <label class="generator-option"><input type="checkbox" id="passLower" checked> Letras minúsculas (a–z)</label>
+        <label class="generator-option"><input type="checkbox" id="passUpper" checked> Letras maiúsculas (A–Z)</label>
+        <label class="generator-option"><input type="checkbox" id="passNumbers" checked> Números (0–9)</label>
+        <label class="generator-option"><input type="checkbox" id="passSymbols" checked> Símbolos (!@#$…)</label>
+      </div>
+      <div class="generator-result"><input id="generatedPassword" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Senha gerada"><button type="button" onclick="copyGeneratedPassword()">Copiar senha</button></div>
+      <div class="generator-actions"><button class="primary-button" type="button" onclick="generateSecurePassword()">↻ Gerar outra senha</button><button class="secondary-button" type="button" onclick="useGeneratedPasswordInVault()">🔐 Salvar em Minhas senhas</button></div>
+      <div class="generator-status" id="generatorStatus" role="status"></div>
+    </div>
+  </section>
+  <footer class="site-footer">2026 | MXDrive por Levimxa | Agradecimentos: Supabase e GitHub</footer>
+</div>
+</main>
+</div>
+
+<input type="file" id="fileInput" multiple hidden onchange="uploadFiles(this.files)">
+<div class="toast" id="toast" role="status"></div>
+
+<div class="modal" id="previewModal" onclick="if(event.target===this)closePreview()">
+  <div class="modal-box">
+    <div class="modal-head"><strong id="previewTitle">Visualização do arquivo</strong><button onclick="closePreview()" aria-label="Fechar">×</button></div>
+    <div class="modal-body" id="previewBody"></div>
+    <div class="modal-footer"><button class="secondary-button" onclick="closePreview()">Fechar</button><button class="primary-button" id="previewOpenButton" onclick="openCurrentFile()">Abrir arquivo</button></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://ehvgixekasdmzuceyjye.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_LsipoOKbUt5Aaw_pUzMgZg_RBLYbNYV";
+let supabaseClient=null, mxAuthMode="login", mxAuthUser=null;
+let vaultRecord=null, vaultKey=null, vaultEntries=[], vaultReady=false, vaultMode="unlock";
+const CLIENT_ID="682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
+const SCOPES="openid email profile https://www.googleapis.com/auth/drive";
+const API="https://www.googleapis.com/drive/v3";
+const UPLOAD_API="https://www.googleapis.com/upload/drive/v3/files";
+
+let tokenClient=null, accessToken=null, userEmail="", userName="", files=[];
+let currentSection="files", currentView="grid", currentPreviewFile=null, toastTimer=null;
+let silentLoginAttempted=false;
+const $=id=>document.getElementById(id);
+
+async function initMXDriveAuth(){
+  const message=$("authMessage");
+  if(!window.supabase?.createClient){message.textContent="Não foi possível carregar o sistema de login. Atualize a página.";return;}
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+    mxAuthUser=session?.user||null;
+    showMXDriveApp(Boolean(mxAuthUser));
+  });
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error){message.textContent="Erro ao verificar a sessão. Tente novamente.";return;}
+  mxAuthUser=data.session?.user||null;
+  showMXDriveApp(Boolean(mxAuthUser));
+}
+function showMXDriveApp(authed){
+  $("authGate").style.display=authed?"none":"flex";
+  $("mxApp").classList.toggle("authenticated",authed);
+  $("mxLogout").style.display=authed?"inline-block":"none";
+  if(authed){
+    $("authMessage").textContent="";
+    $("accountName").textContent=mxAuthUser?.user_metadata?.name||mxAuthUser?.email||"Minha conta";
+    $("accountEmail").textContent=mxAuthUser?.email||"";
+    $("avatar").textContent=(mxAuthUser?.email||"M").charAt(0).toUpperCase();
+  }
+}
+function toggleMXAuthMode(){
+  mxAuthMode=mxAuthMode==="login"?"signup":"login";
+  $("authTitle").textContent=mxAuthMode==="login"?"Entrar no MXDrive":"Criar conta no MXDrive";
+  $("authIntro").textContent=mxAuthMode==="login"?"Entre com sua conta para acessar seu espaço pessoal.":"Crie sua conta para começar a usar o MXDrive.";
+  $("authSubmit").textContent=mxAuthMode==="login"?"Entrar":"Criar conta";
+  $("authSwitch").textContent=mxAuthMode==="login"?"Criar uma conta":"Já tenho uma conta";
+  $("authPassword").autocomplete=mxAuthMode==="login"?"current-password":"new-password";
+  $("authMessage").textContent="";$("authMessage").classList.remove("ok");
+}
+async function submitMXAuth(event){
+  event.preventDefault();
+  if(!supabaseClient){$("authMessage").textContent="O login ainda está carregando. Atualize a página.";return;}
+  const email=$("authEmail").value.trim(),password=$("authPassword").value;
+  const submit=$("authSubmit");submit.disabled=true;submit.textContent="Aguarde...";
+  $("authMessage").textContent="";$("authMessage").classList.remove("ok");
+  try{
+    if(mxAuthMode==="signup"){
+      const {data,error}=await supabaseClient.auth.signUp({email,password});
+      if(error)throw error;
+      if(!data.session){
+        $("authMessage").classList.add("ok");
+        $("authMessage").textContent="Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre.";
+      }else{
+        $("authMessage").classList.add("ok");$("authMessage").textContent="Conta criada com sucesso!";
+      }
+    }else{
+      const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+      if(error)throw error;
+    }
+  }catch(error){$("authMessage").textContent=error.message||"Não foi possível entrar.";}
+  finally{submit.disabled=false;submit.textContent=mxAuthMode==="login"?"Entrar":"Criar conta";}
+}
+async function logoutMXDrive(){
+  if(vaultKey)lockPasswordVault();
+  if(supabaseClient)await supabaseClient.auth.signOut();
+  logout();$("authEmail").value="";$("authPassword").value="";
+}
+function toast(message){
+  const el=$("toast");el.textContent=message;el.classList.add("show");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3500);
+}
+
+/* Inicializa o OAuth e tenta login silencioso ao abrir o site. */
+function initializeGoogle(){
+  if(!window.google?.accounts?.oauth2){
+    setTimeout(initializeGoogle,300);
+    return;
+  }
+
+  if(!tokenClient){
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID,
+      scope:SCOPES,
+      callback:handleTokenResponse,
+      error_callback:error=>{
+        // Uma tentativa silenciosa pode falhar normalmente.
+        console.info("Login automático não disponível:",error?.type||"sem sessão");
+      }
+    });
+  }
+
+  if(!silentLoginAttempted){
+    silentLoginAttempted=true;
+    try{
+      tokenClient.requestAccessToken({prompt:""});
+    }catch(error){
+      console.info("Não foi possível tentar o login automático.",error);
+    }
+  }
+}
+
+async function handleTokenResponse(response){
+  if(response.error||!response.access_token){
+    // Mantém o botão de login disponível se não existir sessão silenciosa.
+    updateAccount();
+    return;
+  }
+
+  accessToken=response.access_token;
+
+  try{
+    const res=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{
+      headers:{Authorization:"Bearer "+accessToken}
+    });
+    if(!res.ok)throw new Error("Não foi possível obter os dados da conta.");
+
+    const user=await res.json();
+    userEmail=user.email||"";
+    userName=user.name||userEmail||"Minha conta";
+    updateAccount();
+    await loadFiles();
+  }catch(error){
+    accessToken=null;
+    updateAccount();
+    toast(error.message||"Erro ao conectar à conta.");
+  }
+}
+
+function login(){
+  if(!window.google?.accounts?.oauth2){
+    toast("O login do Google ainda está carregando.");
+    return;
+  }
+
+  if(!tokenClient){
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID,
+      scope:SCOPES,
+      callback:handleTokenResponse,
+      error_callback:error=>toast("Não foi possível entrar com o Google.")
+    });
+  }
+
+  // No clique do usuário, permite escolher/autorizar a conta se necessário.
+  tokenClient.requestAccessToken({prompt:"consent"});
+}
+
+function updateAccount(){
+  const connected=Boolean(accessToken);
+  $("loginButton").style.display=connected?"none":"inline-block";
+  $("account").style.display=connected?"flex":"none";
+  $("accountName").textContent=userName||"Minha conta";
+  $("accountEmail").textContent=userEmail;
+  $("avatar").textContent=(userName||"M").trim().charAt(0).toUpperCase();
+  $("statusDot").classList.toggle("connected",connected);
+  $("connectionTitle").textContent=connected?"Google Drive conectado":"Google Drive desconectado";
+  $("connectionText").textContent=connected
+    ?"Sua conta está conectada. Seus arquivos são carregados do Google Drive."
+    :"Entre com sua conta Google para acessar seus arquivos.";
+  $("connectionButton").textContent=connected?"Desconectar":"Conectar conta";
+  $("connectionButton").onclick=connected?logout:login;
+}
+
+function logout(){
+  if(accessToken&&window.google?.accounts?.oauth2){
+    google.accounts.oauth2.revoke(accessToken,()=>{});
+  }
+  accessToken=null;userEmail="";userName="";files=[];
+  updateAccount();updateStorage(null);renderFiles();
+  toast("Conta desconectada deste site.");
+}
+
+async function apiFetch(url,options={}){
+  if(!accessToken)throw new Error("Entre com sua conta Google primeiro.");
+  const response=await fetch(url,{
+    ...options,
+    headers:{Authorization:"Bearer "+accessToken,...(options.headers||{})}
+  });
+  if(response.status===401){
+    accessToken=null;updateAccount();
+    throw new Error("Sua sessão expirou. Entre novamente.");
+  }
+  if(!response.ok){
+    let message="Erro ao acessar o Google Drive.";
+    try{const data=await response.json();message=data.error?.message||message;}catch(_){}
+    throw new Error(message);
+  }
+  if(response.status===204)return null;
+  return response;
+}
+
+async function loadFiles(){
+  if(!accessToken){renderFiles();return;}
+  $("fileCount").textContent="Carregando arquivos...";
+  $("fileGrid").innerHTML="";
+  const query={
+    files:"trashed = false",
+    recent:"trashed = false",
+    shared:"sharedWithMe = true and trashed = false",
+    trash:"trashed = true"
+  };
+  try{
+    const params=new URLSearchParams({
+      pageSize:"100",
+      orderBy:currentSection==="recent"?"modifiedTime desc":"name",
+      fields:"nextPageToken,files(id,name,mimeType,size,modifiedTime,thumbnailLink,webViewLink,shared,capabilities(canTrash))",
+      q:query[currentSection]||query.files
+    });
+    const response=await apiFetch(API+"/files?"+params);
+    const data=await response.json();
+    files=data.files||[];
+    renderFiles();
+    await loadStorage();
+  }catch(error){
+    $("fileCount").textContent="Não foi possível carregar os arquivos";
+    $("fileGrid").style.display="none";$("emptyState").style.display="block";
+    $("emptyIcon").textContent="⚠️";$("emptyTitle").textContent="Não foi possível carregar";
+    $("emptyMessage").textContent=error.message;
+    $("emptyButton").textContent="Tentar novamente";$("emptyButton").onclick=loadFiles;
+    toast(error.message);
+  }
+}
+
+async function loadStorage(){
+  try{
+    const response=await apiFetch(API+"/about?fields=storageQuota(limit,usage)");
+    const data=await response.json();updateStorage(data.storageQuota);
+  }catch(_){updateStorage(null);}
+}
+
+function updateStorage(quota){
+  if(!quota){
+    $("storageFill").style.width="0%";
+    $("storageNote").textContent=accessToken?"Não foi possível consultar o espaço.":"Conecte sua conta Google para ver seus arquivos.";
+    return;
+  }
+  const used=Number(quota.usage||0),limit=Number(quota.limit||0);
+  $("storageFill").style.width=(limit>0?Math.min(100,used/limit*100):0)+"%";
+  $("storageNote").textContent=limit>0
+    ?formatBytes(used)+" usados de "+formatBytes(limit)
+    :formatBytes(used)+" usados. Limite não informado.";
+}
+
+function openPasswordGenerator(button){
+  document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
+  $("sidebar").classList.remove("open");
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel","passwordVaultSection"].forEach(id=>$(id).style.display="none");
+  $("passwordGeneratorSection").style.display="block";
+  $("searchInput").value="";
+  if(!$("generatedPassword").value)generateSecurePassword();
+  $("generatorStatus").textContent="";
+}
+function updatePasswordLength(){
+  $("passwordLengthValue").textContent=$("passwordLength").value+" caracteres";
+}
+function secureRandomIndex(max){
+  if(!Number.isSafeInteger(max)||max<1)throw new Error("Opção inválida.");
+  const range=0x100000000,limit=Math.floor(range/max)*max;
+  const values=new Uint32Array(1);
+  do{crypto.getRandomValues(values);}while(values[0]>=limit);
+  return values[0]%max;
+}
+function generateSecurePassword(){
+  const groups=[];
+  if($("passLower").checked)groups.push("abcdefghijkmnopqrstuvwxyz");
+  if($("passUpper").checked)groups.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
+  if($("passNumbers").checked)groups.push("23456789");
+  if($("passSymbols").checked)groups.push("!@#$%^&*()-_=+[]{};:,.?");
+  const status=$("generatorStatus");
+  if(!groups.length){$("generatedPassword").value="";status.style.color="#b42332";status.textContent="Selecione pelo menos um tipo de caractere.";return;}
+  const length=Number($("passwordLength").value);
+  if(length<groups.length){status.style.color="#b42332";status.textContent="Aumente o comprimento para incluir todos os tipos selecionados.";return;}
+  if(!window.crypto?.getRandomValues){status.style.color="#b42332";status.textContent="Este navegador não oferece geração criptograficamente segura.";return;}
+  try{
+    const all=groups.join("");
+    const chars=groups.map(group=>group[secureRandomIndex(group.length)]);
+    while(chars.length<length)chars.push(all[secureRandomIndex(all.length)]);
+    for(let i=chars.length-1;i>0;i--){const j=secureRandomIndex(i+1);[chars[i],chars[j]]=[chars[j],chars[i]];}
+    $("generatedPassword").value=chars.join("");
+    status.style.color="#16834b";status.textContent="Senha gerada com segurança neste dispositivo.";
+  }catch(error){status.style.color="#b42332";status.textContent="Não foi possível gerar a senha. Tente novamente.";}
+}
+async function copyGeneratedPassword(){
+  const value=$("generatedPassword").value;
+  if(!value){generateSecurePassword();return;}
+  const status=$("generatorStatus");
+  try{await navigator.clipboard.writeText(value);status.style.color="#16834b";status.textContent="Senha copiada para a área de transferência.";}
+  catch(_){$("generatedPassword").focus();$("generatedPassword").select();status.style.color="#b42332";status.textContent="Cópia automática indisponível. A senha foi selecionada para você copiar.";}
+}
+function useGeneratedPasswordInVault(){
+  const value=$("generatedPassword").value;
+  if(!value){generateSecurePassword();return;}
+  openPasswordVault(document.querySelector('.nav-item[onclick="openPasswordVault(this)"]'));
+  $("vaultEntryPassword").value=value;
+  $("generatorStatus").style.color="#16834b";
+  $("generatorStatus").textContent="Senha preenchida no cofre. Desbloqueie ou crie o cofre e depois salve a entrada.";
+}
+function changeSection(section,button){
+  $("passwordVaultSection").style.display="none";$("passwordGeneratorSection").style.display="none";
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="");
+  currentSection=section;
+  document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
+  $("sectionTitle").textContent={files:"Meus arquivos",recent:"Arquivos recentes",shared:"Compartilhados comigo",trash:"Lixeira"}[section];
+  $("searchInput").value="";$("sidebar").classList.remove("open");loadFiles();
+}
+
+async function openPasswordVault(button){
+  document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
+  $("sidebar").classList.remove("open");
+  $("passwordGeneratorSection").style.display="none";
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="none");
+  $("passwordVaultSection").style.display="block";
+  $("vaultLockCard").style.display="block";$("vaultUnlocked").style.display="none";
+  $("vaultMessage").textContent="Verificando seu cofre...";$("vaultMessage").classList.remove("ok");
+  $("vaultKeyForm").reset();$("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";
+  vaultKey=null;vaultEntries=[];vaultReady=false;vaultRecord=null;
+  if(!mxAuthUser||!supabaseClient){$("vaultMessage").textContent="Entre na sua conta MXDrive para acessar o cofre.";return;}
+  const {data,error}=await supabaseClient.from("password_vault").select("owner_id,encrypted_data,salt,iv,updated_at").eq("owner_id",mxAuthUser.id).maybeSingle();
+  if(error){
+    $("vaultMessage").textContent="O banco do cofre ainda não está pronto. Primeiro, execute o SQL de criação da tabela no Supabase. Detalhe: "+error.message;
+    return;
+  }
+  vaultRecord=data;
+  vaultMode=data?"unlock":"create";
+  $("vaultLockTitle").textContent=data?"Desbloquear cofre":"Criar seu cofre de senhas";
+  $("vaultLockText").textContent=data?"Digite a senha mestra para descriptografar suas senhas.":"Defina uma senha mestra forte. Ela será usada para criptografar suas senhas antes de salvá-las.";
+  $("vaultConfirmWrap").style.display=data?"none":"block";
+  $("vaultMasterPassword").autocomplete=data?"current-password":"new-password";
+  $("vaultKeyButton").textContent=data?"Desbloquear cofre":"Criar cofre";
+  $("vaultMessage").textContent="";
+}
+async function submitVaultKey(event){
+  event.preventDefault();
+  const pass=$("vaultMasterPassword").value;
+  const msg=$("vaultMessage");msg.classList.remove("ok");msg.textContent="";
+  if(vaultMode==="create"&&pass!==$("vaultMasterConfirm").value){msg.textContent="As senhas mestras não coincidem.";return;}
+  if(vaultMode==="create"&&pass.length<12){msg.textContent="Use uma senha mestra com pelo menos 12 caracteres.";return;}
+  const button=$("vaultKeyButton");button.disabled=true;button.textContent="Processando...";
+  try{
+    if(vaultMode==="create"){
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      vaultKey=await deriveVaultKey(pass,salt);
+      vaultEntries=[];vaultRecord={owner_id:mxAuthUser.id,salt:bytesToBase64(salt)};
+      await persistVault();
+      showUnlockedVault();msg.classList.add("ok");msg.textContent="Cofre criado e protegido.";
+    }else{
+      const salt=base64ToBytes(vaultRecord.salt);
+      vaultKey=await deriveVaultKey(pass,salt);
+      const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:base64ToBytes(vaultRecord.iv)},vaultKey,base64ToBytes(vaultRecord.encrypted_data));
+      const parsed=JSON.parse(new TextDecoder().decode(plain));
+      if(!Array.isArray(parsed))throw new Error("Formato do cofre inválido.");
+      vaultEntries=parsed;showUnlockedVault();
+    }
+    $("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";
+  }catch(error){
+    vaultKey=null;
+    msg.textContent=vaultMode==="unlock"?"Senha mestra incorreta ou dados criptografados inválidos.":(error.message||"Não foi possível criar o cofre.");
+  }finally{button.disabled=false;button.textContent=vaultMode==="unlock"?"Desbloquear cofre":"Criar cofre";}
+}
+async function deriveVaultKey(password,saltBytes){
+  const material=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:saltBytes,iterations:310000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+function bytesToBase64(bytes){
+  let binary="";for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToBytes(value){
+  const binary=atob(value);const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return bytes;
+}
+async function persistVault(){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const plain=new TextEncoder().encode(JSON.stringify(vaultEntries));
+  const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},vaultKey,plain);
+  const payload={owner_id:mxAuthUser.id,salt:vaultRecord.salt,iv:bytesToBase64(iv),encrypted_data:bytesToBase64(new Uint8Array(encrypted)),updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from("password_vault").upsert(payload,{onConflict:"owner_id"});
+  if(error)throw error;
+  vaultRecord=payload;
+}
+function showUnlockedVault(){
+  vaultReady=true;$("vaultLockCard").style.display="none";$("vaultUnlocked").style.display="block";
+  renderVaultEntries();
+}
+function renderVaultEntries(){
+  const list=$("vaultEntryList");list.innerHTML="";
+  $("vaultEntryCount").textContent=vaultEntries.length+(vaultEntries.length===1?" item":" itens");
+  if(!vaultEntries.length){const empty=document.createElement("div");empty.className="vault-empty";empty.textContent="Seu cofre está vazio. Adicione sua primeira senha acima.";list.appendChild(empty);return;}
+  vaultEntries.forEach(entry=>{
+    const card=document.createElement("article");card.className="vault-item";
+    const top=document.createElement("div");top.className="vault-item-top";
+    const info=document.createElement("div");const title=document.createElement("h4");title.textContent=entry.site;const user=document.createElement("div");user.className="vault-user";user.textContent=entry.username||"Sem usuário";
+    info.append(title,user);const actions=document.createElement("div");actions.className="vault-actions";
+    actions.append(actionButton("Copiar usuário",()=>copyVaultText(entry.username||"")),actionButton("Excluir",()=>deleteVaultEntry(entry.id)));
+    top.append(info,actions);
+    const secretRow=document.createElement("div");secretRow.className="vault-secret-row";
+    const secret=document.createElement("span");secret.className="vault-secret";secret.textContent="••••••••••••";
+    const reveal=actionButton("Mostrar",()=>{const visible=secret.textContent===entry.password;secret.textContent=visible?entry.password:"••••••••••••";reveal.textContent=visible?"Ocultar":"Mostrar";});
+    secretRow.append(secret,reveal,actionButton("Copiar senha",()=>copyVaultText(entry.password)));
+    card.append(top,secretRow);
+    if(entry.note){const note=document.createElement("div");note.className="vault-note";note.textContent=entry.note;card.appendChild(note);}
+    list.appendChild(card);
+  });
+}
+async function copyVaultText(value){
+  try{await navigator.clipboard.writeText(value);$("vaultSaveMessage").classList.add("ok");$("vaultSaveMessage").textContent="Copiado para a área de transferência.";}
+  catch(_){$("vaultSaveMessage").classList.remove("ok");$("vaultSaveMessage").textContent="Não foi possível copiar automaticamente neste navegador.";}
+}
+async function addVaultEntry(event){
+  event.preventDefault();if(!vaultReady||!vaultKey)return;
+  const entry={id:crypto.randomUUID(),site:$("vaultSite").value.trim(),username:$("vaultUsername").value.trim(),password:$("vaultEntryPassword").value,note:$("vaultNote").value.trim(),created_at:new Date().toISOString()};
+  const msg=$("vaultSaveMessage");msg.classList.remove("ok");msg.textContent="Criptografando e salvando...";
+  const button=$("vaultEntryForm").querySelector('button[type="submit"]');button.disabled=true;
+  vaultEntries.push(entry);
+  try{await persistVault();$("vaultEntryForm").reset();renderVaultEntries();msg.classList.add("ok");msg.textContent="Senha salva com criptografia.";}
+  catch(error){vaultEntries=vaultEntries.filter(item=>item.id!==entry.id);msg.textContent="Erro ao salvar: "+error.message;}
+  finally{button.disabled=false;}
+}
+async function deleteVaultEntry(id){
+  if(!confirm("Excluir esta senha do seu cofre?"))return;
+  const previous=vaultEntries;vaultEntries=previous.filter(entry=>entry.id!==id);
+  const msg=$("vaultSaveMessage");msg.classList.remove("ok");msg.textContent="Salvando alteração...";
+  try{await persistVault();renderVaultEntries();msg.classList.add("ok");msg.textContent="Senha excluída.";}
+  catch(error){vaultEntries=previous;renderVaultEntries();msg.textContent="Erro ao excluir: "+error.message;}
+}
+function lockPasswordVault(){
+  vaultKey=null;vaultEntries=[];vaultReady=false;
+  $("vaultUnlocked").style.display="none";$("vaultLockCard").style.display="block";
+  $("vaultLockTitle").textContent="Cofre bloqueado";$("vaultLockText").textContent="Digite novamente sua senha mestra para acessar as senhas.";
+  $("vaultConfirmWrap").style.display="none";$("vaultKeyButton").textContent="Desbloquear cofre";
+  $("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";$("vaultMessage").textContent="";$("vaultSaveMessage").textContent="";
+}
+function setView(view){
+  currentView=view;
+  $("gridButton").classList.toggle("active",view==="grid");
+  $("listButton").classList.toggle("active",view==="list");
+  renderFiles();
+}
+
+function renderFiles(){
+  const grid=$("fileGrid"),empty=$("emptyState");
+  const query=$("searchInput").value.trim().toLocaleLowerCase("pt-BR");
+  grid.innerHTML="";grid.classList.toggle("list-view",currentView==="list");
+  grid.style.display="grid";
+  $("gridButton").classList.toggle("active",currentView==="grid");
+  $("listButton").classList.toggle("active",currentView==="list");
+
+  if(!accessToken){
+    grid.style.display="none";empty.style.display="block";
+    $("fileCount").textContent="Conecte sua conta para começar";
+    $("emptyIcon").textContent="☁️";$("emptyTitle").textContent="Sua nuvem está pronta!";
+    $("emptyMessage").textContent="Entre com sua conta Google para ver, enviar e gerenciar seus arquivos.";
+    $("emptyButton").textContent="Conectar Google Drive";$("emptyButton").onclick=login;
+    return;
+  }
+
+  const filtered=files.filter(file=>file.name.toLocaleLowerCase("pt-BR").includes(query));
+  $("fileCount").textContent=filtered.length+(filtered.length===1?" arquivo":" arquivos");
+
+  if(!filtered.length){
+    grid.style.display="none";empty.style.display="block";
+    $("emptyIcon").textContent=query?"⌕":"📂";
+    $("emptyTitle").textContent=query?"Nenhum resultado encontrado":"Nenhum arquivo por aqui";
+    $("emptyMessage").textContent=query?"Tente pesquisar usando outro nome.":currentSection==="trash"?"A lixeira está vazia.":"Envie arquivos para começar a organizar sua nuvem.";
+    $("emptyButton").textContent=currentSection==="trash"||query?"Atualizar":"Enviar arquivos";
+    $("emptyButton").onclick=currentSection==="trash"||query?loadFiles:chooseFiles;
+    return;
+  }
+
+  empty.style.display="none";
+  filtered.forEach((file,index)=>{
+    const card=document.createElement("article");card.className="file-card";
+    card.style.animationDelay=Math.min(index*20,200)+"ms";
+    const preview=document.createElement("div");preview.className="file-preview";
+    preview.title="Visualizar arquivo";preview.onclick=()=>previewFile(file);
+    const type=fileType(file),symbol=document.createElement("span");
+    symbol.className="file-symbol";symbol.textContent=type.icon;preview.appendChild(symbol);
+
+    if(file.thumbnailLink&&type.image){
+      const img=document.createElement("img");img.src=file.thumbnailLink;img.alt=file.name;img.loading="lazy";
+      img.onerror=()=>img.remove();preview.replaceChildren(img);
+    }
+    const label=document.createElement("span");label.className="file-type-label";label.textContent=type.label;preview.appendChild(label);
+
+    const details=document.createElement("div");details.className="file-details";
+    const name=document.createElement("div");name.className="file-name";name.title=file.name;name.textContent=file.name;
+    const meta=document.createElement("div");meta.className="file-meta";
+    const size=document.createElement("span");size.textContent=file.size?formatBytes(Number(file.size)):type.label;
+    const date=document.createElement("span");date.textContent=formatDate(file.modifiedTime);
+    meta.append(size,date);details.append(name,meta);
+
+    const actions=document.createElement("div");actions.className="file-actions";
+    if(currentSection==="trash"){
+      actions.append(actionButton("Restaurar",()=>restoreFile(file)),actionButton("Excluir",()=>deleteForever(file),"delete-button"));
+    }else{
+      actions.append(actionButton("Abrir",()=>previewFile(file)),actionButton("Baixar",()=>downloadFile(file)));
+      if(file.capabilities?.canTrash)actions.append(actionButton("Lixeira",()=>trashFile(file),"delete-button"));
+    }
+    card.append(preview,details,actions);grid.appendChild(card);
+  });
+}
+
+function actionButton(label,callback,extraClass=""){
+  const button=document.createElement("button");button.type="button";button.textContent=label;
+  if(extraClass)button.classList.add(extraClass);button.onclick=callback;return button;
+}
+
+function fileType(file){
+  const mime=file.mimeType||"";
+  if(mime.startsWith("image/"))return{icon:"🖼️",label:"IMAGEM",image:true};
+  if(mime.startsWith("video/"))return{icon:"🎬",label:"VÍDEO"};
+  if(mime.startsWith("audio/"))return{icon:"🎵",label:"ÁUDIO"};
+  if(mime==="application/pdf")return{icon:"📕",label:"PDF"};
+  if(mime.includes("spreadsheet"))return{icon:"📊",label:"PLANILHA"};
+  if(mime.includes("presentation"))return{icon:"📽️",label:"APRESENTAÇÃO"};
+  if(mime.includes("document")||mime.startsWith("text/"))return{icon:"📄",label:"DOCUMENTO"};
+  if(mime.includes("folder"))return{icon:"📁",label:"PASTA"};
+  if(mime.includes("zip")||mime.includes("compressed"))return{icon:"🗜️",label:"ARQUIVO ZIP"};
+  return{icon:"📦",label:"ARQUIVO"};
+}
+
+function formatBytes(bytes){
+  if(!Number.isFinite(bytes)||bytes<0)return"—";
+  if(bytes<1024)return bytes+" B";
+  const units=["KB","MB","GB","TB"];let value=bytes/1024,index=0;
+  while(value>=1024&&index<units.length-1){value/=1024;index++;}
+  return value.toLocaleString("pt-BR",{maximumFractionDigits:1})+" "+units[index];
+}
+function formatDate(value){
+  if(!value)return"—";const date=new Date(value);
+  return Number.isNaN(date.getTime())?"—":date.toLocaleDateString("pt-BR");
+}
+
+function chooseFiles(){
+  if(!accessToken){toast("Entre com sua conta Google primeiro.");login();return;}
+  $("fileInput").click();
+}
+
+async function uploadFiles(selectedFiles){
+  if(!selectedFiles?.length)return;
+  if(!accessToken)return toast("Entre com sua conta Google primeiro.");
+  const list=Array.from(selectedFiles);let completed=0,failures=0;
+  $("progressWrap").style.display="block";$("progressFill").style.width="0%";
+
+  for(const file of list){
+    $("progressText").textContent="Enviando "+file.name+" ("+(completed+failures+1)+"/"+list.length+")";
+    try{
+      const metadata={name:file.name},boundary="mxdrive_"+Math.random().toString(16).slice(2);
+      const delimiter="\r\n--"+boundary+"\r\n",closeDelimiter="\r\n--"+boundary+"--";
+      const body=new Blob([
+        delimiter,"Content-Type: application/json; charset=UTF-8\r\n\r\n",JSON.stringify(metadata),
+        delimiter,"Content-Type: "+(file.type||"application/octet-stream")+"\r\n\r\n",file,closeDelimiter
+      ],{type:"multipart/related; boundary="+boundary});
+      const response=await apiFetch(UPLOAD_API+"?uploadType=multipart&fields=id,name,mimeType,size,modifiedTime,thumbnailLink,webViewLink,capabilities(canTrash)",{
+        method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body
+      });
+      await response.json();completed++;
+    }catch(error){failures++;console.error(error);}
+    $("progressFill").style.width=((completed+failures)/list.length*100)+"%";
+  }
+  $("fileInput").value="";$("progressText").textContent=completed+" enviado(s), "+failures+" com erro(s).";
+  await loadFiles();setTimeout(()=>$("progressWrap").style.display="none",2500);
+  toast(failures===0?"Upload concluído!":"Upload concluído com "+failures+" erro(s).");
+}
+
+async function downloadFile(file){
+  try{
+    let url;
+    if(file.mimeType==="application/vnd.google-apps.document")url=API+"/files/"+encodeURIComponent(file.id)+"/export?mimeType=application/pdf";
+    else if(file.mimeType==="application/vnd.google-apps.spreadsheet")url=API+"/files/"+encodeURIComponent(file.id)+"/export?mimeType=text/csv";
+    else if(file.mimeType==="application/vnd.google-apps.presentation")url=API+"/files/"+encodeURIComponent(file.id)+"/export?mimeType=application/pdf";
+    else if(file.mimeType?.startsWith("application/vnd.google-apps.")){
+      if(file.webViewLink){window.open(file.webViewLink,"_blank","noopener");return;}
+      throw new Error("Abra este arquivo no Google Drive.");
+    }else url=API+"/files/"+encodeURIComponent(file.id)+"?alt=media";
+
+    const response=await apiFetch(url),blob=await response.blob(),objectUrl=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=objectUrl;a.download=file.name||"arquivo";
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);
+  }catch(error){toast(error.message||"Não foi possível baixar o arquivo.");}
+}
+
+async function previewFile(file){
+  currentPreviewFile=file;$("previewTitle").textContent=file.name;
+  $("previewBody").textContent="Carregando visualização...";$("previewModal").classList.add("show");
+  const mime=file.mimeType||"";
+  try{
+    if(file.webViewLink&&mime.startsWith("application/vnd.google-apps.")){
+      $("previewBody").textContent="Este arquivo abre no Google Drive.";
+      $("previewOpenButton").textContent="Abrir no Google Drive";return;
+    }
+    $("previewOpenButton").textContent="Baixar arquivo";
+    if(mime.startsWith("image/")||mime==="application/pdf"||mime.startsWith("video/")||mime.startsWith("audio/")){
+      const response=await apiFetch(API+"/files/"+encodeURIComponent(file.id)+"?alt=media");
+      const url=URL.createObjectURL(await response.blob());$("previewBody").innerHTML="";
+      let element;
+      if(mime.startsWith("image/")){element=document.createElement("img");element.alt=file.name;}
+      else if(mime==="application/pdf"){element=document.createElement("iframe");element.title=file.name;}
+      else{element=document.createElement(mime.startsWith("video/")?"video":"audio");element.controls=true;}
+      element.src=url;$("previewBody").appendChild(element);
+    }else if(mime.startsWith("text/")||mime==="application/json"){
+      const response=await apiFetch(API+"/files/"+encodeURIComponent(file.id)+"?alt=media");
+      const pre=document.createElement("pre");pre.textContent=(await response.text()).slice(0,50000);
+      $("previewBody").innerHTML="";$("previewBody").appendChild(pre);
+    }else{
+      $("previewBody").textContent="A prévia não está disponível para este tipo de arquivo.";
+    }
+  }catch(error){$("previewBody").textContent=error.message||"Não foi possível mostrar a prévia.";}
+}
+
+function openCurrentFile(){
+  if(!currentPreviewFile)return;
+  const file=currentPreviewFile;closePreview();
+  if(file.webViewLink&&file.mimeType?.startsWith("application/vnd.google-apps."))window.open(file.webViewLink,"_blank","noopener");
+  else downloadFile(file);
+}
+function closePreview(){$("previewModal").classList.remove("show");$("previewBody").innerHTML="";currentPreviewFile=null;}
+
+async function trashFile(file){
+  if(!confirm('Mover "'+file.name+'" para a lixeira?'))return;
+  try{
+    await apiFetch(API+"/files/"+encodeURIComponent(file.id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({trashed:true})});
+    toast("Arquivo movido para a lixeira.");await loadFiles();
+  }catch(error){toast(error.message);}
+}
+async function restoreFile(file){
+  try{
+    await apiFetch(API+"/files/"+encodeURIComponent(file.id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({trashed:false})});
+    toast("Arquivo restaurado.");await loadFiles();
+  }catch(error){toast(error.message);}
+}
+async function deleteForever(file){
+  if(!confirm('Excluir "'+file.name+'" permanentemente? Essa ação não pode ser desfeita.'))return;
+  try{
+    await apiFetch(API+"/files/"+encodeURIComponent(file.id),{method:"DELETE"});
+    toast("Arquivo excluído permanentemente.");await loadFiles();
+  }catch(error){toast(error.message);}
+}
+
+function toggleSidebar(){$("sidebar").classList.toggle("open");}
+document.addEventListener("click",event=>{
+  if(window.innerWidth>680)return;
+  const sidebar=$("sidebar"),button=document.querySelector(".mobile-menu");
+  if(sidebar.classList.contains("open")&&!sidebar.contains(event.target)&&!button.contains(event.target))sidebar.classList.remove("open");
+});
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closePreview();});
+
+updateAccount();
+renderFiles();
+initMXDriveAuth();
+</script>
+</body>
+</html>
