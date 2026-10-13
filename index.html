@@ -93,6 +93,13 @@ button:focus-visible,input:focus-visible{outline:3px solid #8cb7ff;outline-offse
 .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f3ad37;margin-right:6px}
 .status-dot.connected{background:#25bd7a}
 footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-footer{font-size:9px;padding:18px 8px 2px;color:#a0a9b9}
+.vault-section{margin-top:28px;animation:appear .35s ease}.vault-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.vault-heading h2{margin:8px 0;font-size:24px}.vault-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.vault-lock-card,.vault-add-card{max-width:620px;padding:23px;background:#fff;border:1px solid var(--border);border-radius:15px}.vault-lock-card h3,.vault-add-card h3{margin:0 0 9px;font-size:17px}.vault-lock-card>p{font-size:13px;line-height:1.6;color:var(--muted);margin:0 0 18px}
+.vault-label{display:block;font-size:12px;font-weight:750;color:#4b5870;margin:14px 0 7px}.vault-input{width:100%;min-height:43px;border:1px solid #dce4f0;border-radius:9px;padding:10px 12px;background:white;color:var(--text)}.vault-input:focus{outline:3px solid #8cb7ff;outline-offset:1px}
+#vaultKeyButton{margin-top:16px;width:100%;min-height:43px}.vault-message{font-size:12px;line-height:1.6;margin-top:12px;color:#b42332;overflow-wrap:anywhere}.vault-message.ok{color:#16834b}.vault-warning{margin:18px 0 0!important;padding-top:13px;border-top:1px solid var(--border);font-size:11px!important}
+.vault-add-card{max-width:none}.vault-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;margin-bottom:15px}.vault-list-heading{display:flex;align-items:center;justify-content:space-between;margin:27px 0 13px}.vault-list-heading h3{font-size:17px;margin:0}.vault-list-heading span{font-size:12px;color:var(--muted)}
+.vault-list{display:grid;gap:10px}.vault-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;min-width:0}.vault-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.vault-item h4{font-size:14px;margin:0 0 5px;overflow-wrap:anywhere}.vault-item .vault-user{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.vault-item .vault-note{font-size:12px;color:#68758b;margin-top:9px;overflow-wrap:anywhere}.vault-secret-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}.vault-secret{font-family:monospace;font-size:13px;overflow-wrap:anywhere;flex:1;min-width:120px}.vault-actions{display:flex;gap:6px;flex-wrap:wrap}.vault-actions button,.vault-secret-row button{border:1px solid var(--border);background:white;color:#53627a;border-radius:8px;padding:7px 9px;font-size:11px}.vault-actions button:hover,.vault-secret-row button:hover{background:var(--light);color:var(--blue)}.vault-empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #d9e3f2;border-radius:12px;font-size:13px}
+@media(max-width:600px){.vault-heading{align-items:flex-start;flex-direction:column}.vault-form-grid{grid-template-columns:1fr}.vault-lock-card,.vault-add-card{padding:17px}}
 .toast{position:fixed;right:22px;bottom:22px;z-index:100;max-width:calc(100vw - 32px);background:#172033;color:#fff;padding:14px 18px;border-radius:12px;font-size:13px;box-shadow:0 8px 30px #0002;opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s}
 .toast.show{opacity:1;transform:translateY(0)}
 .modal{display:none;position:fixed;inset:0;z-index:90;padding:20px;background:#101828a8;backdrop-filter:blur(5px);align-items:center;justify-content:center}
@@ -166,6 +173,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
     <button class="nav-item" onclick="changeSection('recent',this)"><span class="nav-icon">◷</span>Recentes</button>
     <button class="nav-item" onclick="changeSection('shared',this)"><span class="nav-icon">♧</span>Compartilhados</button>
     <button class="nav-item" onclick="changeSection('trash',this)"><span class="nav-icon">♲</span>Lixeira</button>
+    <button class="nav-item" onclick="openPasswordVault(this)"><span class="nav-icon">🔐</span>Minhas senhas</button>
   </nav>
   <div class="sidebar-bottom">
     <div class="storage-card">
@@ -192,7 +200,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
 </header>
 
 <div class="content">
-  <section class="welcome">
+  <section class="welcome" id="driveWelcome">
     <div class="welcome-text">
       <div class="welcome-label">SUA NUVEM PESSOAL</div>
       <h1>Bem-vindo ao MXDrive!</h1>
@@ -201,7 +209,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
     <div class="welcome-art" aria-hidden="true">☁️</div>
   </section>
 
-  <div class="section-heading">
+  <div class="section-heading" id="driveHeading">
     <div><h2 id="sectionTitle">Meus arquivos</h2><p id="fileCount">Entre com sua conta para começar</p></div>
     <div class="view-buttons"><button id="gridButton" class="active" onclick="setView('grid')" title="Grade">▦</button><button id="listButton" onclick="setView('list')" title="Lista">☷</button></div>
   </div>
@@ -216,9 +224,38 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
     <div id="progressText">Enviando arquivos...</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   </div>
-  <section class="login-panel">
+  <section class="login-panel" id="driveLoginPanel">
     <div><strong><span class="status-dot" id="statusDot"></span><span id="connectionTitle">Google Drive desconectado</span></strong><p id="connectionText">Entre com sua conta Google para acessar seus arquivos.</p></div>
     <button class="primary-button" id="connectionButton" onclick="login()">Conectar conta</button>
+  </section>
+  <section class="vault-section" id="passwordVaultSection" style="display:none">
+    <div class="vault-heading"><div><div class="welcome-label" style="color:var(--blue)">PROTEGIDO POR CRIPTOGRAFIA</div><h2>🔐 Minhas senhas</h2><p>Suas senhas ficam criptografadas antes de serem salvas na nuvem.</p></div><button class="secondary-button" onclick="lockPasswordVault()">Bloquear cofre</button></div>
+    <div class="vault-lock-card" id="vaultLockCard">
+      <h3 id="vaultLockTitle">Desbloquear cofre</h3><p id="vaultLockText">Digite sua senha mestra para acessar suas senhas salvas.</p>
+      <form id="vaultKeyForm" onsubmit="submitVaultKey(event)">
+        <label class="vault-label" for="vaultMasterPassword">Senha mestra</label>
+        <input class="vault-input" id="vaultMasterPassword" type="password" autocomplete="current-password" minlength="12" required placeholder="Use pelo menos 12 caracteres">
+        <div id="vaultConfirmWrap" style="display:none"><label class="vault-label" for="vaultMasterConfirm">Confirme a senha mestra</label><input class="vault-input" id="vaultMasterConfirm" type="password" autocomplete="new-password" minlength="12" placeholder="Digite a mesma senha"></div>
+        <button class="primary-button" id="vaultKeyButton" type="submit">Desbloquear</button>
+      </form>
+      <div class="vault-message" id="vaultMessage" role="status"></div>
+      <p class="vault-warning">Importante: se você esquecer a senha mestra, não será possível recuperar as senhas criptografadas. Guarde-a em um lugar seguro.</p>
+    </div>
+    <div id="vaultUnlocked" style="display:none">
+      <form class="vault-add-card" id="vaultEntryForm" onsubmit="addVaultEntry(event)">
+        <h3>Adicionar senha</h3>
+        <div class="vault-form-grid">
+          <div><label class="vault-label" for="vaultSite">Site ou serviço *</label><input class="vault-input" id="vaultSite" required maxlength="150" placeholder="Ex.: Minecraft"></div>
+          <div><label class="vault-label" for="vaultUsername">Usuário ou e-mail</label><input class="vault-input" id="vaultUsername" maxlength="200" autocomplete="off" placeholder="Seu usuário"></div>
+          <div><label class="vault-label" for="vaultEntryPassword">Senha *</label><input class="vault-input" id="vaultEntryPassword" required maxlength="2000" autocomplete="new-password" placeholder="Senha da conta"></div>
+          <div><label class="vault-label" for="vaultNote">Observação</label><input class="vault-input" id="vaultNote" maxlength="500" placeholder="Opcional"></div>
+        </div>
+        <button class="primary-button" type="submit">＋ Salvar senha</button>
+      </form>
+      <div class="vault-list-heading"><h3>Senhas salvas</h3><span id="vaultEntryCount">0 itens</span></div>
+      <div class="vault-list" id="vaultEntryList"></div>
+      <div class="vault-message" id="vaultSaveMessage" role="status"></div>
+    </div>
   </section>
   <footer class="site-footer">2026 | MXDrive por Levimxa | Agradecimentos: Supabase e GitHub</footer>
 </div>
@@ -240,6 +277,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
 const SUPABASE_URL="https://ehvgixekasdmzuceyjye.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_LsipoOKbUt5Aaw_pUzMgZg_RBLYbNYV";
 let supabaseClient=null, mxAuthMode="login", mxAuthUser=null;
+let vaultRecord=null, vaultKey=null, vaultEntries=[], vaultReady=false, vaultMode="unlock";
 const CLIENT_ID="682933991065-p7oh9h33u0rhp91d49knobtug0pdf2qh.apps.googleusercontent.com";
 const SCOPES="openid email profile https://www.googleapis.com/auth/drive";
 const API="https://www.googleapis.com/drive/v3";
@@ -489,12 +527,140 @@ function updateStorage(quota){
 }
 
 function changeSection(section,button){
+  $("passwordVaultSection").style.display="none";
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="");
   currentSection=section;
   document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
   $("sectionTitle").textContent={files:"Meus arquivos",recent:"Arquivos recentes",shared:"Compartilhados comigo",trash:"Lixeira"}[section];
   $("searchInput").value="";$("sidebar").classList.remove("open");loadFiles();
 }
 
+async function openPasswordVault(button){
+  document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
+  $("sidebar").classList.remove("open");
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="none");
+  $("passwordVaultSection").style.display="block";
+  $("vaultLockCard").style.display="block";$("vaultUnlocked").style.display="none";
+  $("vaultMessage").textContent="Verificando seu cofre...";$("vaultMessage").classList.remove("ok");
+  $("vaultKeyForm").reset();$("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";
+  vaultKey=null;vaultEntries=[];vaultReady=false;vaultRecord=null;
+  if(!mxAuthUser||!supabaseClient){$("vaultMessage").textContent="Entre na sua conta MXDrive para acessar o cofre.";return;}
+  const {data,error}=await supabaseClient.from("password_vault").select("owner_id,encrypted_data,salt,iv,updated_at").eq("owner_id",mxAuthUser.id).maybeSingle();
+  if(error){
+    $("vaultMessage").textContent="O banco do cofre ainda não está pronto. Primeiro, execute o SQL de criação da tabela no Supabase. Detalhe: "+error.message;
+    return;
+  }
+  vaultRecord=data;
+  vaultMode=data?"unlock":"create";
+  $("vaultLockTitle").textContent=data?"Desbloquear cofre":"Criar seu cofre de senhas";
+  $("vaultLockText").textContent=data?"Digite a senha mestra para descriptografar suas senhas.":"Defina uma senha mestra forte. Ela será usada para criptografar suas senhas antes de salvá-las.";
+  $("vaultConfirmWrap").style.display=data?"none":"block";
+  $("vaultMasterPassword").autocomplete=data?"current-password":"new-password";
+  $("vaultKeyButton").textContent=data?"Desbloquear cofre":"Criar cofre";
+  $("vaultMessage").textContent="";
+}
+async function submitVaultKey(event){
+  event.preventDefault();
+  const pass=$("vaultMasterPassword").value;
+  const msg=$("vaultMessage");msg.classList.remove("ok");msg.textContent="";
+  if(vaultMode==="create"&&pass!==$("vaultMasterConfirm").value){msg.textContent="As senhas mestras não coincidem.";return;}
+  if(vaultMode==="create"&&pass.length<12){msg.textContent="Use uma senha mestra com pelo menos 12 caracteres.";return;}
+  const button=$("vaultKeyButton");button.disabled=true;button.textContent="Processando...";
+  try{
+    if(vaultMode==="create"){
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      vaultKey=await deriveVaultKey(pass,salt);
+      vaultEntries=[];vaultRecord={owner_id:mxAuthUser.id,salt:bytesToBase64(salt)};
+      await persistVault();
+      showUnlockedVault();msg.classList.add("ok");msg.textContent="Cofre criado e protegido.";
+    }else{
+      const salt=base64ToBytes(vaultRecord.salt);
+      vaultKey=await deriveVaultKey(pass,salt);
+      const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:base64ToBytes(vaultRecord.iv)},vaultKey,base64ToBytes(vaultRecord.encrypted_data));
+      const parsed=JSON.parse(new TextDecoder().decode(plain));
+      if(!Array.isArray(parsed))throw new Error("Formato do cofre inválido.");
+      vaultEntries=parsed;showUnlockedVault();
+    }
+    $("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";
+  }catch(error){
+    vaultKey=null;
+    msg.textContent=vaultMode==="unlock"?"Senha mestra incorreta ou dados criptografados inválidos.":(error.message||"Não foi possível criar o cofre.");
+  }finally{button.disabled=false;button.textContent=vaultMode==="unlock"?"Desbloquear cofre":"Criar cofre";}
+}
+async function deriveVaultKey(password,saltBytes){
+  const material=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:saltBytes,iterations:310000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+function bytesToBase64(bytes){
+  let binary="";for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToBytes(value){
+  const binary=atob(value);const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return bytes;
+}
+async function persistVault(){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const plain=new TextEncoder().encode(JSON.stringify(vaultEntries));
+  const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},vaultKey,plain);
+  const payload={owner_id:mxAuthUser.id,salt:vaultRecord.salt,iv:bytesToBase64(iv),encrypted_data:bytesToBase64(new Uint8Array(encrypted)),updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from("password_vault").upsert(payload,{onConflict:"owner_id"});
+  if(error)throw error;
+  vaultRecord=payload;
+}
+function showUnlockedVault(){
+  vaultReady=true;$("vaultLockCard").style.display="none";$("vaultUnlocked").style.display="block";
+  renderVaultEntries();
+}
+function renderVaultEntries(){
+  const list=$("vaultEntryList");list.innerHTML="";
+  $("vaultEntryCount").textContent=vaultEntries.length+(vaultEntries.length===1?" item":" itens");
+  if(!vaultEntries.length){const empty=document.createElement("div");empty.className="vault-empty";empty.textContent="Seu cofre está vazio. Adicione sua primeira senha acima.";list.appendChild(empty);return;}
+  vaultEntries.forEach(entry=>{
+    const card=document.createElement("article");card.className="vault-item";
+    const top=document.createElement("div");top.className="vault-item-top";
+    const info=document.createElement("div");const title=document.createElement("h4");title.textContent=entry.site;const user=document.createElement("div");user.className="vault-user";user.textContent=entry.username||"Sem usuário";
+    info.append(title,user);const actions=document.createElement("div");actions.className="vault-actions";
+    actions.append(actionButton("Copiar usuário",()=>copyVaultText(entry.username||"")),actionButton("Excluir",()=>deleteVaultEntry(entry.id)));
+    top.append(info,actions);
+    const secretRow=document.createElement("div");secretRow.className="vault-secret-row";
+    const secret=document.createElement("span");secret.className="vault-secret";secret.textContent="••••••••••••";
+    const reveal=actionButton("Mostrar",()=>{const visible=secret.textContent===entry.password;secret.textContent=visible?entry.password:"••••••••••••";reveal.textContent=visible?"Ocultar":"Mostrar";});
+    secretRow.append(secret,reveal,actionButton("Copiar senha",()=>copyVaultText(entry.password)));
+    card.append(top,secretRow);
+    if(entry.note){const note=document.createElement("div");note.className="vault-note";note.textContent=entry.note;card.appendChild(note);}
+    list.appendChild(card);
+  });
+}
+async function copyVaultText(value){
+  try{await navigator.clipboard.writeText(value);$("vaultSaveMessage").classList.add("ok");$("vaultSaveMessage").textContent="Copiado para a área de transferência.";}
+  catch(_){$("vaultSaveMessage").classList.remove("ok");$("vaultSaveMessage").textContent="Não foi possível copiar automaticamente neste navegador.";}
+}
+async function addVaultEntry(event){
+  event.preventDefault();if(!vaultReady||!vaultKey)return;
+  const entry={id:crypto.randomUUID(),site:$("vaultSite").value.trim(),username:$("vaultUsername").value.trim(),password:$("vaultEntryPassword").value,note:$("vaultNote").value.trim(),created_at:new Date().toISOString()};
+  const msg=$("vaultSaveMessage");msg.classList.remove("ok");msg.textContent="Criptografando e salvando...";
+  const button=$("vaultEntryForm").querySelector('button[type="submit"]');button.disabled=true;
+  vaultEntries.push(entry);
+  try{await persistVault();$("vaultEntryForm").reset();renderVaultEntries();msg.classList.add("ok");msg.textContent="Senha salva com criptografia.";}
+  catch(error){vaultEntries=vaultEntries.filter(item=>item.id!==entry.id);msg.textContent="Erro ao salvar: "+error.message;}
+  finally{button.disabled=false;}
+}
+async function deleteVaultEntry(id){
+  if(!confirm("Excluir esta senha do seu cofre?"))return;
+  const previous=vaultEntries;vaultEntries=previous.filter(entry=>entry.id!==id);
+  const msg=$("vaultSaveMessage");msg.classList.remove("ok");msg.textContent="Salvando alteração...";
+  try{await persistVault();renderVaultEntries();msg.classList.add("ok");msg.textContent="Senha excluída.";}
+  catch(error){vaultEntries=previous;renderVaultEntries();msg.textContent="Erro ao excluir: "+error.message;}
+}
+function lockPasswordVault(){
+  vaultKey=null;vaultEntries=[];vaultReady=false;
+  $("vaultUnlocked").style.display="none";$("vaultLockCard").style.display="block";
+  $("vaultLockTitle").textContent="Cofre bloqueado";$("vaultLockText").textContent="Digite novamente sua senha mestra para acessar as senhas.";
+  $("vaultConfirmWrap").style.display="none";$("vaultKeyButton").textContent="Desbloquear cofre";
+  $("vaultMasterPassword").value="";$("vaultMasterConfirm").value="";$("vaultMessage").textContent="";$("vaultSaveMessage").textContent="";
+}
 function setView(view){
   currentView=view;
   $("gridButton").classList.toggle("active",view==="grid");
