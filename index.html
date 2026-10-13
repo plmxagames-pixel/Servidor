@@ -99,6 +99,20 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
 #vaultKeyButton{margin-top:16px;width:100%;min-height:43px}.vault-message{font-size:12px;line-height:1.6;margin-top:12px;color:#b42332;overflow-wrap:anywhere}.vault-message.ok{color:#16834b}.vault-warning{margin:18px 0 0!important;padding-top:13px;border-top:1px solid var(--border);font-size:11px!important}
 .vault-add-card{max-width:none}.vault-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;margin-bottom:15px}.vault-list-heading{display:flex;align-items:center;justify-content:space-between;margin:27px 0 13px}.vault-list-heading h3{font-size:17px;margin:0}.vault-list-heading span{font-size:12px;color:var(--muted)}
 .vault-list{display:grid;gap:10px}.vault-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;min-width:0}.vault-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.vault-item h4{font-size:14px;margin:0 0 5px;overflow-wrap:anywhere}.vault-item .vault-user{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.vault-item .vault-note{font-size:12px;color:#68758b;margin-top:9px;overflow-wrap:anywhere}.vault-secret-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}.vault-secret{font-family:monospace;font-size:13px;overflow-wrap:anywhere;flex:1;min-width:120px}.vault-actions{display:flex;gap:6px;flex-wrap:wrap}.vault-actions button,.vault-secret-row button{border:1px solid var(--border);background:white;color:#53627a;border-radius:8px;padding:7px 9px;font-size:11px}.vault-actions button:hover,.vault-secret-row button:hover{background:var(--light);color:var(--blue)}.vault-empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #d9e3f2;border-radius:12px;font-size:13px}
+.generator-card{max-width:760px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px}
+.generator-card h2{margin:0 0 8px;font-size:23px}.generator-intro{margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.6}
+.generator-result{display:flex;gap:8px;align-items:stretch;margin:16px 0 20px}
+.generator-result input{min-width:0;flex:1;border:1px solid #dce4f0;border-radius:10px;padding:13px;font:600 16px ui-monospace,SFMono-Regular,Consolas,monospace;background:#f7f9fd;color:var(--text)}
+.generator-result button{border:1px solid var(--border);border-radius:10px;background:white;padding:0 14px;color:#53627a}
+.generator-options{display:grid;grid-template-columns:1fr 1fr;gap:13px 20px;margin:18px 0 22px}
+.generator-option{display:flex;align-items:center;gap:9px;font-size:13px;color:#4b5870}
+.generator-option input{accent-color:var(--blue);width:16px;height:16px}
+.generator-length{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:700}
+.generator-length output{color:var(--blue);font-variant-numeric:tabular-nums}
+#passwordLength{width:100%;accent-color:var(--blue);margin:14px 0 4px}
+.generator-actions{display:flex;gap:9px;flex-wrap:wrap}.generator-actions button{min-height:42px}
+.generator-status{min-height:19px;margin-top:12px;color:#16834b;font-size:12px}
+@media(max-width:520px){.generator-card{padding:17px}.generator-options{grid-template-columns:1fr}.generator-result{flex-wrap:wrap}.generator-result input{flex-basis:100%;width:100%;font-size:14px}.generator-result button{min-height:40px;flex:1}}
 @media(max-width:600px){.vault-heading{align-items:flex-start;flex-direction:column}.vault-form-grid{grid-template-columns:1fr}.vault-lock-card,.vault-add-card{padding:17px}}
 .toast{position:fixed;right:22px;bottom:22px;z-index:100;max-width:calc(100vw - 32px);background:#172033;color:#fff;padding:14px 18px;border-radius:12px;font-size:13px;box-shadow:0 8px 30px #0002;opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -174,6 +188,7 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
     <button class="nav-item" onclick="changeSection('shared',this)"><span class="nav-icon">♧</span>Compartilhados</button>
     <button class="nav-item" onclick="changeSection('trash',this)"><span class="nav-icon">♲</span>Lixeira</button>
     <button class="nav-item" onclick="openPasswordVault(this)"><span class="nav-icon">🔐</span>Minhas senhas</button>
+    <button class="nav-item" onclick="openPasswordGenerator(this)"><span class="nav-icon">🛡️</span>Gerar senha segura</button>
   </nav>
   <div class="sidebar-bottom">
     <div class="storage-card">
@@ -255,6 +270,24 @@ footer{text-align:center;padding:30px 10px 0;color:#9aa4b6;font-size:11px}.site-
       <div class="vault-list-heading"><h3>Senhas salvas</h3><span id="vaultEntryCount">0 itens</span></div>
       <div class="vault-list" id="vaultEntryList"></div>
       <div class="vault-message" id="vaultSaveMessage" role="status"></div>
+    </div>
+  </section>
+  <section class="vault-section" id="passwordGeneratorSection" style="display:none">
+    <div class="generator-card">
+      <div class="welcome-label" style="color:var(--blue)">GERADOR DE SENHAS</div>
+      <h2>🛡️ Senha segura</h2>
+      <p class="generator-intro">Crie uma senha aleatória forte, como os geradores de senhas dos navegadores. A senha é criada neste navegador e não é enviada para o MXDrive.</p>
+      <div class="generator-length"><label for="passwordLength">Comprimento da senha</label><output id="passwordLengthValue" for="passwordLength">16 caracteres</output></div>
+      <input id="passwordLength" type="range" min="8" max="64" step="1" value="16" oninput="updatePasswordLength()">
+      <div class="generator-options">
+        <label class="generator-option"><input type="checkbox" id="passLower" checked> Letras minúsculas (a–z)</label>
+        <label class="generator-option"><input type="checkbox" id="passUpper" checked> Letras maiúsculas (A–Z)</label>
+        <label class="generator-option"><input type="checkbox" id="passNumbers" checked> Números (0–9)</label>
+        <label class="generator-option"><input type="checkbox" id="passSymbols" checked> Símbolos (!@#$…)</label>
+      </div>
+      <div class="generator-result"><input id="generatedPassword" type="text" readonly spellcheck="false" autocomplete="off" aria-label="Senha gerada"><button type="button" onclick="copyGeneratedPassword()">Copiar senha</button></div>
+      <div class="generator-actions"><button class="primary-button" type="button" onclick="generateSecurePassword()">↻ Gerar outra senha</button><button class="secondary-button" type="button" onclick="useGeneratedPasswordInVault()">🔐 Salvar em Minhas senhas</button></div>
+      <div class="generator-status" id="generatorStatus" role="status"></div>
     </div>
   </section>
   <footer class="site-footer">2026 | MXDrive por Levimxa | Agradecimentos: Supabase e GitHub</footer>
@@ -526,8 +559,62 @@ function updateStorage(quota){
     :formatBytes(used)+" usados. Limite não informado.";
 }
 
+function openPasswordGenerator(button){
+  document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
+  $("sidebar").classList.remove("open");
+  ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel","passwordVaultSection"].forEach(id=>$(id).style.display="none");
+  $("passwordGeneratorSection").style.display="block";
+  $("searchInput").value="";
+  if(!$("generatedPassword").value)generateSecurePassword();
+  $("generatorStatus").textContent="";
+}
+function updatePasswordLength(){
+  $("passwordLengthValue").textContent=$("passwordLength").value+" caracteres";
+}
+function secureRandomIndex(max){
+  if(!Number.isSafeInteger(max)||max<1)throw new Error("Opção inválida.");
+  const range=0x100000000,limit=Math.floor(range/max)*max;
+  const values=new Uint32Array(1);
+  do{crypto.getRandomValues(values);}while(values[0]>=limit);
+  return values[0]%max;
+}
+function generateSecurePassword(){
+  const groups=[];
+  if($("passLower").checked)groups.push("abcdefghijkmnopqrstuvwxyz");
+  if($("passUpper").checked)groups.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
+  if($("passNumbers").checked)groups.push("23456789");
+  if($("passSymbols").checked)groups.push("!@#$%^&*()-_=+[]{};:,.?");
+  const status=$("generatorStatus");
+  if(!groups.length){$("generatedPassword").value="";status.style.color="#b42332";status.textContent="Selecione pelo menos um tipo de caractere.";return;}
+  const length=Number($("passwordLength").value);
+  if(length<groups.length){status.style.color="#b42332";status.textContent="Aumente o comprimento para incluir todos os tipos selecionados.";return;}
+  if(!window.crypto?.getRandomValues){status.style.color="#b42332";status.textContent="Este navegador não oferece geração criptograficamente segura.";return;}
+  try{
+    const all=groups.join("");
+    const chars=groups.map(group=>group[secureRandomIndex(group.length)]);
+    while(chars.length<length)chars.push(all[secureRandomIndex(all.length)]);
+    for(let i=chars.length-1;i>0;i--){const j=secureRandomIndex(i+1);[chars[i],chars[j]]=[chars[j],chars[i]];}
+    $("generatedPassword").value=chars.join("");
+    status.style.color="#16834b";status.textContent="Senha gerada com segurança neste dispositivo.";
+  }catch(error){status.style.color="#b42332";status.textContent="Não foi possível gerar a senha. Tente novamente.";}
+}
+async function copyGeneratedPassword(){
+  const value=$("generatedPassword").value;
+  if(!value){generateSecurePassword();return;}
+  const status=$("generatorStatus");
+  try{await navigator.clipboard.writeText(value);status.style.color="#16834b";status.textContent="Senha copiada para a área de transferência.";}
+  catch(_){$("generatedPassword").focus();$("generatedPassword").select();status.style.color="#b42332";status.textContent="Cópia automática indisponível. A senha foi selecionada para você copiar.";}
+}
+function useGeneratedPasswordInVault(){
+  const value=$("generatedPassword").value;
+  if(!value){generateSecurePassword();return;}
+  openPasswordVault(document.querySelector('.nav-item[onclick="openPasswordVault(this)"]'));
+  $("vaultEntryPassword").value=value;
+  $("generatorStatus").style.color="#16834b";
+  $("generatorStatus").textContent="Senha preenchida no cofre. Desbloqueie ou crie o cofre e depois salve a entrada.";
+}
 function changeSection(section,button){
-  $("passwordVaultSection").style.display="none";
+  $("passwordVaultSection").style.display="none";$("passwordGeneratorSection").style.display="none";
   ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="");
   currentSection=section;
   document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
@@ -538,6 +625,7 @@ function changeSection(section,button){
 async function openPasswordVault(button){
   document.querySelectorAll(".nav-item").forEach(item=>item.classList.toggle("active",item===button));
   $("sidebar").classList.remove("open");
+  $("passwordGeneratorSection").style.display="none";
   ["driveWelcome","driveHeading","fileGrid","emptyState","progressWrap","driveLoginPanel"].forEach(id=>$(id).style.display="none");
   $("passwordVaultSection").style.display="block";
   $("vaultLockCard").style.display="block";$("vaultUnlocked").style.display="none";
